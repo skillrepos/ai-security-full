@@ -1,0 +1,78 @@
+"""
+Lab 4 - Secure MCP server (COMPLETE REFERENCE)
+
+A minimal JSON-RPC "MCP" server on :8000. Security middleware:
+  1. Require a valid Bearer JWT (else 401)
+  2. For tools/call, require the matching tools:<name> scope (else 403)
+  3. Only expose a restricted tool manifest
+"""
+import json
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import jwt_util
+
+TOOLS = {
+    "add":      lambda a, b: a + b,
+    "multiply": lambda a, b: a * b,
+    "divide":   lambda a, b: a / b,
+}
+
+
+class Handler(BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def _send(self, code, obj):
+        body = json.dumps(obj).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _authenticate(self):
+        """Return token claims, or None if the Bearer token is missing/invalid."""
+        auth = self.headers.get("Authorization", "")
+        if not auth.startswith("Bearer "):
+            return None
+        try:
+            return jwt_util.decode(auth[7:])
+        except ValueError:
+            return None
+
+    def do_POST(self):
+        n = int(self.headers.get("Content-Length", 0))
+        req = json.loads(self.rfile.read(n).decode() or "{}")
+        rid = req.get("id")
+
+        claims = self._authenticate()
+        if claims is None:
+            return self._send(401, {"id": rid, "error": "Missing or invalid token"})
+
+        method = req.get("method")
+        if method == "tools/list":
+            return self._send(200, {"id": rid, "result": list(TOOLS)})
+
+        if method == "tools/call":
+            params = req.get("params", {})
+            name = params.get("name")
+            scopes = claims.get("scope", "").split()
+            # ---- per-tool scope enforcement ----
+            if f"tools:{name}" not in scopes:
+                print(f"[SECURE] 403 {claims['sub']} lacks tools:{name} "
+                      f"(has {scopes})")
+                return self._send(403, {"id": rid,
+                    "error": f"Forbidden: token scopes {scopes} "
+                             f"do not include tools:{name}"})
+            if name not in TOOLS:
+                return self._send(404, {"id": rid, "error": "unknown tool"})
+            args = params.get("arguments", {})
+            result = TOOLS[name](args.get("a"), args.get("b"))
+            print(f"[SECURE] 200 {claims['sub']} called {name} -> {result}")
+            return self._send(200, {"id": rid, "result": result})
+
+        self._send(400, {"id": rid, "error": "unknown method"})
+
+
+if __name__ == "__main__":
+    print("[SECURE] secure MCP server on http://127.0.0.1:8000")
+    print(f"[SECURE] tools exposed: {list(TOOLS)}")
+    ThreadingHTTPServer(("127.0.0.1", 8000), Handler).serve_forever()

@@ -1,0 +1,33 @@
+# Lab 7 - Security-as-code policy (provided complete)
+# This file is the single source of truth for what the agent may do.
+# Edit it to change runtime behavior WITHOUT touching application code.
+version: 1
+service: omnitech-hr-assistant
+
+# Only these tools may ever be invoked.
+allowed_tools:
+  - lookup_benefits
+  - check_pto
+
+# Explicitly denied (defense in depth; also blocks anything not allow-listed).
+denied_tools:
+  - export_employee_data
+  - send_company_email
+  - update_salary
+
+# The kinds of questions the agent is permitted to answer.
+allowed_query_types:
+  - benefits
+  - pto
+  - general
+
+# Data governance: what the agent may touch.
+data_scopes:
+  allow_pii: false          # block any request that reads PII (e.g. SSN, salary)
+  departments:              # only these departments are in scope
+    - HR
+    - Support
+
+# Runtime limits.
+limits:
+  max_requests_per_session: 6
