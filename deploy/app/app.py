@@ -1,4 +1,4 @@
-"""Sample AI service to be deployed (intentionally contains issues for Lab 8)."""
+"""Sample AI service to be deployed (intentionally contains issues for Capstone)."""
 
 # ISSUE (planted): hardcoded secret should come from a secrets manager.
 API_KEY = "sk-live-9f8e7d6c5b4a3210deadbeefcafef00d"

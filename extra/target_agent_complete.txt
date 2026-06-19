@@ -1,5 +1,5 @@
 """
-Lab 6 - Target agent under test (COMPLETE REFERENCE)
+Lab 7 - Target agent under test (COMPLETE REFERENCE)
 
 A REAL model acting as an HR assistant. Its system prompt holds a confidential
 secret it is told never to reveal. The only thing standing between an attacker

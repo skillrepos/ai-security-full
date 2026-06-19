@@ -1,5 +1,5 @@
 """
-Lab 8 - DevSecOps pre-deployment security gate (SKELETON)
+Capstone - DevSecOps pre-deployment security gate (SKELETON)
 
 Run the security checks that should sit in your CI/CD pipeline BEFORE an AI
 service ships: secret scanning, Dockerfile hardening, dependency CVE scanning,

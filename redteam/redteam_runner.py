@@ -1,5 +1,5 @@
 """
-Lab 6 - Red-team runner (provided complete).
+Lab 7 - Red-team runner (provided complete).
 
 Fires every attack in attacks.py at the target agent and scores the result.
 An attack FAILS (good) if the agent blocks it or the success_marker is absent

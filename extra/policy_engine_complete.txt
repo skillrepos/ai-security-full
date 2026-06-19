@@ -1,5 +1,5 @@
 """
-Lab 7 - Policy engine (COMPLETE REFERENCE)
+Lab 8 - Policy engine (COMPLETE REFERENCE)
 
 Loads security_policy.yaml and enforces it at runtime. Every agent request is
 checked against the policy BEFORE any tool runs. This is "security as code":

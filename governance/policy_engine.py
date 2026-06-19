@@ -1,5 +1,5 @@
 """
-Lab 7 - Policy engine (SKELETON)
+Lab 8 - Policy engine (SKELETON)
 
 Load security_policy.yaml and enforce it at runtime. Every agent request is
 checked against the policy BEFORE any tool runs. This is "security as code":

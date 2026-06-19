@@ -1,5 +1,5 @@
 """
-Lab 6 - Target agent under test (SKELETON)
+Lab 7 - Target agent under test (SKELETON)
 
 A REAL model acting as an HR assistant. Its system prompt holds a confidential
 secret it is told never to reveal. The only thing standing between an attacker

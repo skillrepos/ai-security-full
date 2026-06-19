@@ -31,6 +31,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_URL = os.environ.get("GROQ_URL", "https://api.groq.com/openai/v1/chat/completions")
 GROQ_MODEL_FAST = os.environ.get("GROQ_MODEL_FAST", "llama-3.1-8b-instant")
 GROQ_MODEL_STRONG = os.environ.get("GROQ_MODEL_STRONG", "llama-3.3-70b-versatile")
+GROQ_GUARD_MODEL = os.environ.get("GROQ_GUARD_MODEL", "meta-llama/llama-guard-4-12b")
 
 
 def _resolve(prefer):
@@ -76,11 +77,36 @@ def _groq(messages, prefer, temperature, max_tokens):
     return resp["choices"][0]["message"]["content"].strip()
 
 
+def guard_available():
+    """True if the real Llama Guard moderation backend (Groq) can be used."""
+    return bool(GROQ_API_KEY)
+
+
+def moderate(messages):
+    """Run Meta's Llama Guard (hosted on Groq) over a conversation.
+
+    Returns (verdict, detail) where verdict is "safe" or "unsafe" and detail is
+    the raw classifier output (e.g. "unsafe\\nS2"). Returns (None, reason) when
+    Llama Guard is unavailable (no GROQ_API_KEY) so callers can skip it.
+    """
+    if not GROQ_API_KEY:
+        return None, "Llama Guard unavailable (set GROQ_API_KEY to enable it)"
+    payload = {"model": GROQ_GUARD_MODEL, "messages": messages,
+               "temperature": 0, "max_tokens": 100}
+    try:
+        resp = _post(GROQ_URL, payload, {"Authorization": f"Bearer {GROQ_API_KEY}"})
+    except urllib.error.HTTPError as e:
+        return None, f"Llama Guard request failed ({e.code})"
+    text = resp["choices"][0]["message"]["content"].strip()
+    verdict = "unsafe" if text.lower().startswith("unsafe") else "safe"
+    return verdict, text
+
+
 def _mock(messages, *_):
     """Deterministic offline stand-in. Echoes intent so labs are demoable."""
     user = next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
     sys_txt = " ".join(m["content"] for m in messages if m["role"] == "system").lower()
-    # Tool-selection prompts (Lab 5): return a JSON tool choice.
+    # Tool-selection prompts (Lab 6): return a JSON tool choice.
     if "selects exactly one tool" in sys_txt:
         low = user.lower()
         tool = ("export_employee_data" if ("export" in low or "salary" in low)

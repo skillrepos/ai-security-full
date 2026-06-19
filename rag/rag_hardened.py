@@ -1,17 +1,18 @@
 """
 Lab 2 - Hardened RAG (SKELETON)
 
-Add a SecurityGuard with defense in depth:
+Add a SecurityGuard with defense in depth, in front of the SAME Chroma vector
+database used by the vulnerable version:
   1. Source allowlist  - only trust chunks from known PDFs
   2. Injection detection - block chunks with override/jailbreak patterns
-  3. Relevance threshold - drop low-confidence chunks
+  3. Relevance threshold - drop low-confidence (low-similarity) chunks
   4. Output scanning    - redact phishing URLs / sensitive-data requests
 
 NOTE: incomplete. Merge in the logic from
 extra/rag_hardened_complete.txt before running.
 """
 import re
-from kb import load_chunks, retrieve, rag_answer
+from kb import kb_stats, retrieve, rag_answer
 
 # TODO (merge): TRUSTED_SOURCES allowlist
 TRUSTED_SOURCES = set()
@@ -48,10 +49,10 @@ class SecurityGuard:
 
 
 def main():
-    chunks = load_chunks()
+    count, sources = kb_stats()
     guard = SecurityGuard()
     print("=== HARDENED RAG (defense in depth) ===")
-    for s in sorted({c["source"] for c in chunks}):
+    for s in sources:
         tag = "[TRUSTED]" if s in TRUSTED_SOURCES else "[UNKNOWN]"
         print(f"  {tag} {s}")
     print("\nType a question, 'report', or 'quit'.")
@@ -68,7 +69,7 @@ def main():
             continue
         if not q:
             continue
-        hits = retrieve(q, chunks, k=3)
+        hits = retrieve(q, k=3)
         safe = guard.filter_chunks(hits)
         print("\nSOURCES (after filtering):")
         for h in safe:

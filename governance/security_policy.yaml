@@ -1,4 +1,4 @@
-# Lab 7 - Security-as-code policy (provided complete)
+# Lab 8 - Security-as-code policy (provided complete)
 # This file is the single source of truth for what the agent may do.
 # Edit it to change runtime behavior WITHOUT touching application code.
 version: 1

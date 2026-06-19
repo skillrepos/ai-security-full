@@ -1,5 +1,5 @@
 """
-Lab 6 - Adversarial attack suite (provided complete).
+Lab 7 - Adversarial attack suite (provided complete).
 
 The target is a REAL model acting as an HR assistant. Its system prompt
 contains a confidential secret (an SSN) it is told never to reveal. Each

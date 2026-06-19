@@ -1,64 +1,79 @@
 """
-Lab 4 - Secure MCP server (SKELETON)
+Lab 5 - Secure MCP server (SKELETON)
 
-A minimal JSON-RPC "MCP" server on :8000. Add security middleware:
-  1. Require a valid Bearer JWT (else 401)
-  2. For tools/call, require the matching tools:<name> scope (else 403)
-  3. Only expose a restricted tool manifest
+A real Model Context Protocol server built with FastMCP, exposing three tools
+over streamable HTTP on :8000. Add the security:
+  1. Every tools/call must carry a valid Bearer JWT (verified with PyJWT)
+  2. The call is allowed only if the token's scopes include tools:<name>
+The scope check runs in FastMCP middleware, so every tool is protected by
+default.
 
-NOTE: incomplete. Merge in the auth + scope logic from
+NOTE: incomplete. Merge in the enforce_scope() logic from
 extra/secure_server_complete.txt before running.
 """
-import json
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import jwt_util
-
-# TODO (merge): restricted tool manifest
-TOOLS = {
-    "add": lambda a, b: a + b,
-}
+from fastmcp import FastMCP
+from fastmcp.server.middleware import Middleware
+from fastmcp.server.dependencies import get_http_headers
+from fastmcp.exceptions import ToolError
+import auth
 
 
-class Handler(BaseHTTPRequestHandler):
-    def log_message(self, *a):
-        pass
+def _bearer(headers):
+    """Pull the raw token out of an 'Authorization: Bearer ...' header."""
+    value = headers.get("authorization", "")
+    if value.lower().startswith("bearer "):
+        return value[7:]
+    return None
 
-    def _send(self, code, obj):
-        body = json.dumps(obj).encode()
-        self.send_response(code)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(body)
 
-    def _authenticate(self):
-        """Return token claims, or None if the Bearer token is missing/invalid."""
-        # TODO (merge): read Authorization header, verify Bearer JWT
-        raise NotImplementedError("_authenticate not implemented yet")
+def enforce_scope(claims, tool_name):
+    """Per-tool authorization: the token must carry the tools:<name> scope."""
+    # TODO (merge): read scopes from claims; raise ToolError 403 if the token
+    # does not include tools:<tool_name>.
+    raise NotImplementedError("enforce_scope not implemented yet")
 
-    def do_POST(self):
-        n = int(self.headers.get("Content-Length", 0))
-        req = json.loads(self.rfile.read(n).decode() or "{}")
-        rid = req.get("id")
 
-        claims = self._authenticate()
-        if claims is None:
-            return self._send(401, {"id": rid, "error": "Missing or invalid token"})
+class ScopeMiddleware(Middleware):
+    """Authenticates the JWT and enforces per-tool scopes on every call."""
 
-        method = req.get("method")
-        if method == "tools/list":
-            return self._send(200, {"id": rid, "result": list(TOOLS)})
+    async def on_call_tool(self, context, call_next):
+        headers = get_http_headers(include={"authorization"})
+        token = _bearer(headers)
+        if token is None:
+            raise ToolError("401 Unauthorized: missing bearer token")
+        try:
+            claims = auth.verify_token(token)
+        except Exception as e:
+            raise ToolError(f"401 Unauthorized: invalid token ({e})")
 
-        if method == "tools/call":
-            params = req.get("params", {})
-            name = params.get("name")
-            scopes = claims.get("scope", "").split()
-            # TODO (merge): per-tool scope enforcement -> 403 if missing
-            raise NotImplementedError("scope enforcement not implemented yet")
+        enforce_scope(claims, context.message.name)
+        print(f"[SECURE] {claims['sub']} -> {context.message.name} (allowed)")
+        return await call_next(context)
 
-        self._send(400, {"id": rid, "error": "unknown method"})
+
+mcp = FastMCP("omnitech-calc")
+mcp.add_middleware(ScopeMiddleware())
+
+
+@mcp.tool
+def add(a: float, b: float) -> float:
+    """Add two numbers."""
+    return a + b
+
+
+@mcp.tool
+def multiply(a: float, b: float) -> float:
+    """Multiply two numbers."""
+    return a * b
+
+
+@mcp.tool
+def divide(a: float, b: float) -> float:
+    """Divide a by b."""
+    return a / b
 
 
 if __name__ == "__main__":
-    print("[SECURE] secure MCP server on http://127.0.0.1:8000")
-    print(f"[SECURE] tools exposed: {list(TOOLS)}")
-    ThreadingHTTPServer(("127.0.0.1", 8000), Handler).serve_forever()
+    print("[SECURE] FastMCP server on http://127.0.0.1:8000/mcp/")
+    print("[SECURE] tools exposed: add, multiply, divide (scope-protected)")
+    mcp.run(transport="http", host="127.0.0.1", port=8000)

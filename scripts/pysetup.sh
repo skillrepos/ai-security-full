@@ -9,4 +9,15 @@ source ./$PYTHON_ENV/bin/activate
 if [ -f "./requirements.txt" ]; then
     pip3 install -r "./requirements.txt"
 fi
-echo "Environment ready. Labs are self-contained (stdlib + PyYAML)."
+
+# Pre-download Chroma's embedding model (~80MB) so Lab 2's first run is fast.
+echo "Warming up the Chroma embedding model (one-time download)..."
+python3 - <<'PY' || echo "  (embedder will download on first use of Lab 2)"
+import chromadb
+c = chromadb.Client()
+col = c.get_or_create_collection("warmup_kb")
+col.add(documents=["warm up the embedder"], ids=["1"])
+print("  embedding model ready.")
+PY
+
+echo "Environment ready (stdlib + PyYAML + Chroma)."

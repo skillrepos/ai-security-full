@@ -1,20 +1,24 @@
 """
-Lab 5 - Auditing & Observability for Agents (SKELETON)
+Lab 6 - Auditing & Observability for Agents (SKELETON)
 
 A REAL model drives the agent: for each natural-language request it picks a
-tool to call. Wrap every tool call in structured telemetry -- trace id, span
-id, timing, JSON audit line -- then run an anomaly detector over the audit
-stream to surface suspicious tool-call patterns.
+tool to call. Instrument every tool call with REAL OpenTelemetry spans (trace
+id, span id, attributes, status) under one session trace, then run an anomaly
+detector over the captured spans to surface suspicious patterns.
 
-NOTE: incomplete. Merge in Telemetry.record, handle_request, and
-detect_anomalies from extra/observable_agent_complete.txt before running.
+NOTE: incomplete. Merge in instrument_call() and detect_anomalies() from
+extra/observable_agent_complete.txt before running.
 """
 import json
 import os
 import re
 import sys
-import time
-import uuid
+
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.trace import Status, StatusCode
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "common"))
 import llm
@@ -56,44 +60,46 @@ def authorize(user, tool):
     return not (tool in SENSITIVE_TOOLS and user != "alice")
 
 
-class Telemetry:
-    def __init__(self):
-        self.trace_id = uuid.uuid4().hex[:12]
-        self.events = []
-
-    def record(self, user, tool, args, status, latency_ms):
-        # TODO (merge): build the structured event (trace_id, span_id, user,
-        # tool, args, status, latency_ms, sensitive), print as JSON, store it.
-        raise NotImplementedError("record not implemented yet")
+def instrument_call(tracer, user, request):
+    """Run one agent turn inside an OpenTelemetry span with rich attributes."""
+    # TODO (merge): open a span, call choose_tool(), set attributes
+    # (user, tool, args, sensitive, status), mark denied calls ERROR, and
+    # print a compact [AUDIT] line with the span's trace_id / span_id.
+    raise NotImplementedError("instrument_call not implemented yet")
 
 
-def handle_request(tel, user, request):
-    """Instrument one agent turn: choose a tool, authorize, record a span."""
-    # TODO (merge): time choose_tool(), apply authorize(), record the span
-    raise NotImplementedError("handle_request not implemented yet")
-
-
-def detect_anomalies(events):
-    """Flag suspicious patterns in the audit stream."""
+def detect_anomalies(spans):
+    """Flag suspicious patterns in the captured spans."""
     # TODO (merge): denied calls, sensitive-tool bursts (3+), review list
     raise NotImplementedError("detect_anomalies not implemented yet")
 
 
-def main():
-    tel = Telemetry()
-    print(f"=== OBSERVABLE AGENT (trace {tel.trace_id}; "
-          f"model {llm.active_backend('strong')}) ===\n")
-    events = [handle_request(tel, u, r) for (u, r) in REQUESTS]
+def build_tracer():
+    """Provided: set up a real OTel tracer with an in-memory span exporter."""
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    trace.set_tracer_provider(provider)
+    return trace.get_tracer("omnitech.agent"), exporter
 
+
+def main():
+    tracer, exporter = build_tracer()
+    print(f"=== OBSERVABLE AGENT (OpenTelemetry; model {llm.active_backend('strong')}) ===\n")
+    with tracer.start_as_current_span("agent.session") as session:
+        tid = format(session.get_span_context().trace_id, "032x")[:12]
+        print(f"session trace_id = {tid}\n")
+        for user, request in REQUESTS:
+            instrument_call(tracer, user, request)
+
+    spans = [s for s in exporter.get_finished_spans() if "tool" in s.attributes]
     print("\n=== TELEMETRY SUMMARY ===")
-    print(f"  total spans     : {len(events)}")
-    print(f"  sensitive calls : {sum(e['sensitive'] for e in events)}")
-    print(f"  denied calls    : {sum(e['status'] == 'denied' for e in events)}")
-    avg = sum(e["latency_ms"] for e in events) / len(events)
-    print(f"  avg latency_ms  : {avg:.1f}")
+    print(f"  tool spans      : {len(spans)}")
+    print(f"  sensitive calls : {sum(bool(s.attributes.get('sensitive')) for s in spans)}")
+    print(f"  denied calls    : {sum(s.attributes.get('status') == 'denied' for s in spans)}")
 
     print("\n=== ANOMALY DETECTION ===")
-    for f in detect_anomalies(events):
+    for f in detect_anomalies(spans):
         print(f"  [!] {f}")
     print()
 
