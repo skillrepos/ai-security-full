@@ -193,7 +193,16 @@ def main():
     print(f"The real model, reading the poisoned ticket, proposed: "
           f"{[t for t, _ in model_plan] or '(no valid JSON this run)'}\n")
     run_agent(plan, controls_on=False, label="UNDEFENDED AGENT")
-    run_agent(plan, controls_on=True, label="SECURED AGENT (least privilege + approval + budgets)")
+    # Are the three controls actually implemented yet? (skeleton = no-ops)
+    active = allowed_tools(TASK) != ALL_TOOLS or not within_budget(MAX_STEPS, [])
+    if not active:
+        print("NOTE: the three controls aren't implemented yet, so the 'secured' run\n"
+              "      below behaves exactly like the undefended one -- both BREACH.\n"
+              "      Merge allowed_tools / approve / within_budget from\n"
+              "      extra/secure_agent_complete.txt, then re-run to see it contained.\n")
+    label = ("SECURED AGENT (least privilege + approval + budgets)" if active
+             else "SECURED AGENT (controls NOT implemented yet -- see note above)")
+    run_agent(plan, controls_on=True, label=label)
 
 
 if __name__ == "__main__":
