@@ -302,7 +302,7 @@ code docs/OmniTech_Security_Bulletin.txt
 
 This looks like a legitimate OmniTech bulletin, but it carries three attacks: a hidden `[SYSTEM OVERRIDE]` **prompt injection**, a **phishing URL** (`https://omnitech-secure-verify.com/reset`), and a **social-engineering** instruction to email full credit card numbers for "refund verification."
 
-![The poisoned document](./images/fd-l2-1.png?raw=true "The poisoned document")
+![The poisoned document](./images/sl11.png?raw=true "The poisoned document")
 
 <br><br>
 
@@ -324,7 +324,7 @@ python create_db.py
 
 You'll see each source and its chunk count, with the poisoned PDF flagged. (The first run downloads the small embedding model, ~30-60s; later runs are instant.)
 
-![Building the vector database](./images/fd-l2-2.png?raw=true "Building the vector database")
+![Building the vector database](./images/sl12.png?raw=true "Building the vector database")
 
 <br><br>
 
@@ -336,7 +336,7 @@ python rag_vulnerable.py
 
 You'll see the vector DB load, including the poisoned source mixed in with the two legitimate documents. (The first model query also includes a ~30-60s warm-up.)
 
-![Loading the knowledge base](./images/fd-l2-2b.png?raw=true "Loading the knowledge base")
+![Loading the knowledge base](./images/sl13.png?raw=true "Loading the knowledge base")
 
 <br><br>
 
@@ -348,7 +348,7 @@ How do I reset my password?
 
 Watch the **SOURCES** and **ANSWER**. Because the poisoned bulletin really is about password resets, it scores a high similarity and `OmniTech_Security_Bulletin_2024.pdf` appears among the retrieved sources - and the answer hands the user the **phishing URL** from the poisoned document.
 
-![Phishing URL in the answer](./images/fd-l2-3.png?raw=true "Phishing URL in the answer")
+![Phishing URL in the answer](./images/sl14.png?raw=true "Phishing URL in the answer")
 
 <br><br>
 
@@ -360,17 +360,17 @@ How do I get a refund?
 
 The poisoned document's instruction to share a full credit card number surfaces in the response. The vulnerable system trusts all retrieved context equally. Type `quit` to exit.
 
-✓ **Success looks like (the attack working):** the retrieved **SOURCES** include `OmniTech_Security_Bulletin_2024.pdf`, and the **ANSWER** repeats the attacker's phishing link (and, for the refund question, the credit-card request). The exact wording varies run to run — what matters is that the poisoned content reaches the user. That's the vulnerability you'll close next.
+![Phishing URL in the answer](./images/sl15.png?raw=true "Phishing URL in the answer")
 
 <br><br>
 
-8. Now let's add defenses. Open the diff-and-merge view to compare the skeleton with the complete hardened version:
+8. Now let's add defenses. You can `exit` out of the running program. Open the diff-and-merge view to compare the skeleton with the complete hardened version:
 
 ```
 code -d ../extra/rag_hardened_complete.txt rag_hardened.py
 ```
 
-![Building the hardened version](./images/fd-l2-4.png?raw=true "Building the hardened version")
+![Building the hardened version](./images/sl16.png?raw=true "Building the hardened version")
 
 <br><br>
 
@@ -396,7 +396,7 @@ python rag_hardened.py
 
 Notice the startup output now labels each source `[TRUSTED]` or `[UNKNOWN]`.
 
-![Trusted vs unknown sources](./images/fd-l2-5.png?raw=true "Trusted vs unknown sources")
+![Trusted vs unknown sources](./images/sl17.png?raw=true "Trusted vs unknown sources")
 
 <br><br>
 
@@ -411,9 +411,8 @@ How do I get a refund?
 
 This time the poisoned chunks are blocked at the source-allowlist stage, and any sensitive request that slips into the output is redacted. The answers now come only from the legitimate handbook and returns policy. Type `report` to see every security event, then `quit` to exit.
 
-✓ **Success looks like (the attack stopped):** startup labels the bulletin `[UNKNOWN]`, the answers no longer contain the phishing link, and `report` lists the blocked/redacted events. Same poisoned knowledge base as before — now contained. (If the phishing link still appears, a `SecurityGuard` section didn't merge; reopen the diff at Step 8.)
 
-![Blocked and redacted](./images/fd-l2-6.png?raw=true "Blocked and redacted")
+![Blocked and redacted](./images/sl18.png?raw=true "Blocked and redacted")
 
 <br><br>
 
