@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.2 - 06/20/26
+## Revision 4.3 - 06/20/26
 
 
 **Follow the startup instructions in the README.md file IF NOT ALREADY DONE!**
@@ -517,8 +517,6 @@ python secure_agent.py
 
 **This lab uses two terminals: the MCP server and the client.**
 
-> **New terms in this lab (skip if you do API auth in your sleep):** a **token / JWT** here is a short, signed "pass" a caller presents — *not* the AI "token" from Lab 0. A **Bearer token** just means "whoever holds this pass is allowed in," sent in the request's `Authorization` header. A **scope** is one specific permission written into that pass (e.g., `tools:add` = "may call the add tool"). **Middleware** is code that runs on *every* request before it reaches a tool — the perfect place to check the pass. **Least privilege** = give each caller only the scopes it actually needs. An **identity provider** is the service that issues these passes (here, our little `auth.py`).
-
 <br>
 
 1. From the terminal, change to the *mcp* directory:
@@ -537,6 +535,8 @@ code auth.py
 
 `auth.py` mints and verifies scoped JWTs with the real **PyJWT** library. Note the **client registry**: `full-client` is granted scopes for all three tools (`tools:add`, `tools:multiply`, `tools:divide`), while `limited-client` is granted only `tools:add`. Those scopes are signed into each token's `scope` claim, so they can't be tampered with. (This stands in for a real identity provider.)
 
+![Secure server](./images/sl34.png?raw=true "Secure server")
+
 <br><br>
 
 3. Open the MCP server skeleton:
@@ -546,6 +546,8 @@ code secure_server.py
 ```
 
 This is a real **FastMCP** server exposing three tools (`add`, `multiply`, `divide`) over HTTP. The security lives in `ScopeMiddleware.on_call_tool`, which runs on **every** tool call: it reads the `Authorization` header, verifies the Bearer JWT with `auth.verify_token`, and then calls `enforce_scope()` - the one function you'll complete - to allow the call only if the token carries the matching `tools:<name>` scope.
+
+![Secure server](./images/sl33.png?raw=true "Secure server")
 
 <br><br>
 
@@ -557,7 +559,7 @@ code -d ../extra/secure_server_complete.txt secure_server.py
 
 The provided code already authenticates the JWT (a missing or bad token raises **401**). The piece you merge in is **`enforce_scope(claims, tool_name)`**: read the token's scopes, and raise a **403** `ToolError` if they don't include `tools:<tool_name>`. Because the check is in middleware, it protects every tool by default.
 
-![Building the secure MCP server](./images/fd-l4-1.png?raw=true "Building the secure MCP server")
+![Building the secure MCP server](./images/sl35.png?raw=true "Building the secure MCP server")
 
 <br><br>
 
@@ -573,7 +575,7 @@ python secure_server.py
 
 You should see `FastMCP server on http://127.0.0.1:8000/mcp/` and the list of scope-protected tools.
 
-![Secure server running](./images/fd-l4-3.png?raw=true "Secure server running")
+![Secure server running](./images/sl36.png?raw=true "Secure server running")
 
 <br><br>
 
@@ -586,11 +588,11 @@ python client.py
 
 The client mints a scoped JWT for each registered client and calls all three tools against the server.
 
-✓ **Success looks like:** the client prints three passes — **no-auth** → every call `401`; **full-client** → `add`, `multiply`, `divide` all succeed; **limited-client** → `add` succeeds but `multiply` and `divide` are **DENIED (403)**. If `limited-client` is allowed to multiply or divide, `enforce_scope` didn't merge — stop the server (Ctrl+C in Terminal 1), reopen the diff at Step 4, finish it, and restart the server.
-
 <br><br>
 
 8. Watch the output. First, the **no-auth** run (no token) is rejected on every call with **401 Unauthorized: missing bearer token** - an unauthenticated call never reaches a tool.
+
+![Client running](./images/sl38.png?raw=true "Client running")
 
 <br><br>
 
@@ -600,7 +602,7 @@ The client mints a scoped JWT for each registered client and calls all three too
 
 This is per-tool authorization - the same server, different access levels driven entirely by signed token scopes. Look at the **server** terminal too: it logs each allowed call (`[SECURE] full-client -> multiply (allowed)`).
 
-![Scope enforcement in action](./images/fd-l4-4.png?raw=true "Scope enforcement in action")
+![Scope enforcement in action](./images/sl39.png?raw=true "Scope enforcement in action")
 
 <br><br>
 
