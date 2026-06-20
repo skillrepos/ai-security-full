@@ -380,9 +380,9 @@ Each request flows through four layers: **Llama Guard (input) -> your input guar
 
 <br><br>
 
-9. Look at what happens on the **output** side for requests that did reach the model. The benign answer is **DELIVERED (PASS)**. The last request feeds the model a record containing an SSN and a card number; when the model echoes them back, the output guard redacts the PII and the result is **DELIVERED (FIXED)** with `[SSN-REDACTED]` / `[CARD-REDACTED]` in place. (Exact wording varies by model; the redactions do not.)
+9. Look at what happens on the **output** side for requests that reached the model — this is where you see an important lesson about model variance. The benign password answer is **DELIVERED (PASS)**. The account-record request (with an SSN and card number) shows the model defending itself: a strong, well-aligned model normally **refuses** to repeat that data, so you'll see **DELIVERED (PASS)** with a polite refusal. That's a good outcome — but it means the output PII guard had nothing to redact. The **contact-confirmation** request is the one that exercises that guard: the assistant happily repeats back the email and phone you gave it, so the output guard redacts them and you get **DELIVERED (FIXED)** with `[EMAIL-REDACTED]` / `[PHONE-REDACTED]` in place. (Exact wording varies by model. On a weaker model — or with `LLM_BACKEND=mock` — the model echoes the SSN and card too, and you'll see those redacted as `[SSN-REDACTED]` / `[CARD-REDACTED]`. The point is that the output guard is your backstop for whenever the model *doesn't* refuse on its own.)
 
-![Output guard results](./images/fd-l3-3.png?raw=true "Output guard results")
+![Output guard results](./images/sl27.png?raw=true "Output guard results")
 
 <br><br>
 
