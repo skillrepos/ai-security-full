@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 3.1 - 06/19/26
+## Revision 3.5 - 06/20/26
 
 
 **Follow the startup instructions in the README.md file IF NOT ALREADY DONE!**
@@ -143,7 +143,7 @@ code -d ../extra/something_complete.txt something.py
 1. From the terminal, change to the *threat-model* directory:
 
 ```
-cd /workspaces/ai-security/threat-model
+cd threat-model
 ```
 
 <br><br>
@@ -161,7 +161,7 @@ This describes the **OmniTech Customer Support AI Assistant** as structured data
 
 This is just a model of the system — change the JSON and the threat model changes with it (you'll try that at the end).
 
-![Examining the architecture](./images/fd-l1-1.png?raw=true "Examining the architecture")
+![Examining the architecture](./images/sl1.png?raw=true "Examining the architecture")
 
 <br><br>
 
@@ -177,6 +177,8 @@ Each risk also carries an optional **`atlas`** field — the MITRE ATLAS techniq
 
 Below the catalog, the **`COMPONENT_EXPOSURE`** table gives each component type a **likelihood weight** from 1 to 3 — how reachable/attackable that type is. A `ui` and a `rag` are `3` (they take untrusted input directly), an `llm`/`tool`/`mcp` are `2`, and an internal `datastore`/`deploy` are `1`. The engine uses this number as the *likelihood* half of the score.
 
+![Examining the architecture](./images/sl2.png?raw=true "Examining the architecture")
+
 <br><br>
 
 4. Now open the engine. Most of it is already written; just **two** functions are left blank for you — the lookup and the scoring. Open the diff-and-merge view to compare the skeleton (right) with the complete reference (left):
@@ -191,7 +193,7 @@ The two functions you complete (the join, the trust-boundary check, and the repo
 
 That's the whole method: the engine never "guesses" a threat — it mechanically pairs every component with every applicable risk and scores the pair, which is what makes the result repeatable.
 
-![Merging the threat model engine](./images/fd-l1-2.png?raw=true "Merging the threat model engine")
+![Merging the threat model engine](./images/sl3.png?raw=true "Merging the threat model engine")
 
 <br><br>
 
@@ -207,19 +209,25 @@ python threat_model.py
 
 ✓ **Success looks like:** a table prints and the run ends with `=== DELIVERABLES WRITTEN ===` and two file names. If you instead see `NotImplementedError`, one of the two functions didn't get merged — reopen the diff (Step 4) and finish it.
 
+![Runnning the threat model engine](./images/sl4.png?raw=true "Running the threat model engine")
+
 <br><br>
 
-7. Look at the **threat model table** — you don't need to read all 43 rows, just scan the top. Each row is one **component × risk** pair; the columns are the component, its type, the OWASP risk id and name, the mapped **MITRE ATLAS** technique id(s), the numeric score, and the band. It is sorted by score, highest first. Notice that the `support_agent` component dominates the top with multiple **HIGH** rows — it is an `agent` (likelihood 3) that handles PII (impact 3), so its applicable risks score 9. That matches the real world: an agent that acts autonomously and calls tools is the largest attack surface in this system. The ATLAS column ties each finding to a real, documented attack technique you can look up at atlas.mitre.org.
+7. **Scroll up in the terminal to the start of the tool output.** Look at the **threat model table** — you don't need to read all 43 rows, just scan the top. Each row is one **component × risk** pair; the columns are the component, its type, the OWASP risk id and name, the mapped **MITRE ATLAS** technique id(s), the numeric score, and the band. It is sorted by score, highest first. Notice that the `support_agent` component dominates the top with multiple **HIGH** rows — it is an `agent` (likelihood 3) that handles PII (impact 3), so its applicable risks score 9. That matches the real world: an agent that acts autonomously and calls tools is the largest attack surface in this system. The ATLAS column ties each finding to a real, documented attack technique you can look up at atlas.mitre.org.
 
-![Threat model output](./images/fd-l1-3.png?raw=true "Threat model output")
+![Threat model output](./images/sl5.png?raw=true "Threat model output")
 
 <br><br>
 
 8. Look at the **TRUST BOUNDARY CROSSINGS** section. These are the data flows that move between trust zones (for example, `web_ui -> chat_llm` crosses the internet edge). These crossings are where you should concentrate your strongest controls.
 
+![Trust boundary crossings](./images/sl6.png?raw=true "Trust boundary crossings")
+
 <br><br>
 
 9. Finally, review the **TOP 5 RISKS TO MITIGATE FIRST**. This is the prioritized list you would hand to an engineering team - it tells them exactly which risk, on which component, to address first.
+
+![Top 5 risks](./images/sl7.png?raw=true "Top 5 risks")
 
 <br><br>
 
@@ -227,12 +235,14 @@ python threat_model.py
 
 ```
 code threat_model_report.md
-code architecture_dfd.md
+code architecture_dfd.mmd
 ```
 
-`threat_model_report.md` is a **risk register** - the full prioritized table (OWASP + ATLAS), the trust-boundary crossings, and the top-5, formatted to hand to a team or drop into a ticket. `architecture_dfd.md` is a **data-flow diagram** written in Mermaid - the components grouped by trust zone, with **thick arrows (`==>`) marking every flow that crosses a trust boundary**. To see it rendered, open `architecture_dfd.md` and click the Mermaid preview (the devcontainer ships the preview extension), or open the Markdown preview.
+`threat_model_report.md` is a **risk register** - the full prioritized table (OWASP + ATLAS), the trust-boundary crossings, and the top-5, formatted to hand to a team or drop into a ticket. `architecture_dfd.md` is a **data-flow diagram** written in Mermaid - the components grouped by trust zone, with ** arrows (`-->`) marking every flow that crosses a trust boundary**. To see it rendered, open `architecture_dfd.mmd` and click `F1` to get to the `Command Pallet`. Then find  `Mermaid: Mermaid Preview` and select that entry.
 
-![Generated data-flow diagram](./images/fd-l1-4.png?raw=true "Generated data-flow diagram")
+![Generated risk register](./images/sl8.png?raw=true "Generated risk register")
+
+![Generated data-flow diagram](./images/sl10.png?raw=true "Generated data-flow diagram")
 
 <br><br>
 
