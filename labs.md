@@ -431,6 +431,8 @@ code secure_agent.py
 
 Look at three things. `TICKET` is a support request that *looks* benign ("summarize the Q3 benefits changes") but hides an attacker's instructions in an HTML comment - the indirect-injection payload. The tool set is split into `SAFE_TOOLS` (`read_ticket`, `summarize`) and `HIGH_RISK_TOOLS` (`export_data`, `send_email`, `delete_records`). A **real model** reads the ticket in `build_plan()` and proposes which tools to call - and, taking the bait, it tries to run the dangerous ones.
 
+![indirect injection](./images/sl28.png?raw=true "Indirect injection")
+
 <br><br>
 
 3. Run the agent as shipped to see the attack land:
@@ -439,7 +441,9 @@ Look at three things. `TICKET` is a support request that *looks* benign ("summar
 python secure_agent.py
 ```
 
-The script runs the agent's plan twice. Right now the three control functions are no-ops, so **both** runs behave identically: `export_data`, `send_email`, and `delete_records` all fire, ending in `BREACH`. That's the undefended agent doing exactly what the poisoned ticket told it to. (Tool choices come from a real model, so the model's proposed plan may vary run to run; the canonical attack is replayed so the breach is reproducible.)
+The script runs the agent's plan twice. Right now the three control functions are no-ops, so `export_data`, `send_email`, and `delete_records` all fire, ending in `BREACH`. That's the undefended agent doing exactly what the poisoned ticket told it to. (Tool choices come from a real model, so the model's proposed plan may vary run to run; the canonical attack is replayed so the breach is reproducible.)
+
+![agent run results](./images/sl31.png?raw=true "Agent run results")
 
 <br><br>
 
@@ -449,7 +453,7 @@ The script runs the agent's plan twice. Right now the three control functions ar
 code -d ../extra/secure_agent_complete.txt secure_agent.py
 ```
 
-![Building the secured agent](./images/fd-secagents-1.png?raw=true "Building the secured agent")
+![Building the secured agent](./images/sl30.png?raw=true "Building the secured agent")
 
 <br><br>
 
@@ -464,7 +468,7 @@ code -d ../extra/secure_agent_complete.txt secure_agent.py
 
 <br><br>
 
-7. Run the secured agent:
+7. Run the updated secured agent:
 
 ```
 python secure_agent.py
@@ -481,7 +485,7 @@ python secure_agent.py
 
    The legitimate `read_ticket` and `summarize` steps still succeed, so the agent completes the job it was actually hired to do.
 
-![Same hijack, contained](./images/fd-secagents-2.png?raw=true "Same hijack, contained")
+![Same hijack, contained](./images/sl32.png?raw=true "Same hijack, contained")
 
 <br><br>
 
