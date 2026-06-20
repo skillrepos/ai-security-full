@@ -40,7 +40,7 @@ You can either open it in a separate browser instance or open it in the codespac
 
 Labs 2, 3, 5, 6, and 7 use a real language model so you can observe genuine model behavior and genuine attacks. A shared helper, `common/llm.py`, picks the backend automatically; you do not call it directly.
 
-**Ollama (`llama3.2:3b`) - default, no setup needed.** The `scripts/startup_ollama.sh` script (run automatically when the Codespace is created) installs Ollama, starts it, and pulls `llama3.2:3b`. If a lab ever reports it cannot reach Ollama, run `bash scripts/startOllama.sh` from the repo root. The first model call in a session takes ~30-60 seconds to warm up; subsequent calls are quick.
+**Ollama (`llama3.2:3b`) - default, no setup needed.** The `scripts/startup_ollama.sh` script (run automatically when the Codespace is created) installs Ollama, starts it, pulls `llama3.2:3b`, and runs a first-inference warm-up. If a lab ever reports it cannot reach Ollama, run `bash scripts/startOllama.sh` from the repo root. You can also pre-warm manually with `python3 scripts/warmup_ollama.py`. The first model call in a session may still take ~30-60 seconds after long idle periods; subsequent calls are quick.
 
 **Groq - optional, faster and more powerful.** If you set a free Groq API key, **all five model labs use Groq instead of Ollama** - `llama-3.1-8b-instant` for the "fast" labs and `llama-3.3-70b-versatile` for the "strong" ones (Labs 2 and 5). Groq's inference is extremely fast and removes the local warm-up. Without a key, the labs use Ollama automatically. To enable it:
 
@@ -82,7 +82,7 @@ Because these labs use a real model, **exact wording varies from run to run** - 
 ## Troubleshooting
 
 - **A lab reports it cannot reach Ollama** - the server isn't running. Run `bash scripts/startOllama.sh` from the repo root, then retry. Check `/tmp/ollama.log` if it persists.
-- **The first model call is slow (~30-60s)** - that's the one-time model warm-up. Later calls in the same session are fast.
+- **The first model call is slow (~30-60s)** - run `python3 scripts/warmup_ollama.py` once, then retry. Later calls in the same session are fast.
 - **Groq returns 429 (rate limit)** - you've exceeded the free tier's ~30 req/min. Wait a few seconds and retry, or `export LLM_BACKEND=ollama` to switch to the local model. Make sure each person uses their own key.
 - **Groq returns 401 / invalid key** - `GROQ_API_KEY` is missing or wrong. Re-copy the key from console.groq.com, or unset it to fall back to Ollama.
 - **A `python` command "hangs"** - the RAG and MCP labs use interactive prompts or run servers. Follow the lab's stop instruction (`quit` or `Ctrl+C`).
