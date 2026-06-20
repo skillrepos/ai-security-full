@@ -144,18 +144,7 @@ code architecture_dfd.mmd
 
 <br><br>
 
-**Is this how threat modeling is done in production?**
 
-The **method** is real and industry-standard: inventory the components, map each to a known catalog of threats, score by **likelihood × impact**, rank to get a prioritized backlog, and pay special attention to **trust-boundary crossings**. That is the backbone of OWASP threat modeling, STRIDE, and the risk matrices security teams use every day. Anchoring on the **OWASP LLM Top 10 (2025)** *and* **MITRE ATLAS** for an AI system is exactly what you'd do for real, and the data-flow diagram and risk register the lab generates are the genuine artifacts a threat model produces.
-
-What we **simplified for the lab** (so you can see the whole pipeline in ten minutes):
-
-   - **It's normally a team activity, captured in a tool.** In production a threat model is a workshop with engineers and security, recorded in something like OWASP Threat Dragon, the Microsoft Threat Modeling Tool, or IriusRisk. Tools such as **threagile** even generate the model from a YAML description of the architecture — conceptually the same as our `architecture.json` → engine flow, just far richer. Our 80-line script stands in for that tooling.
-   - **The scoring is a deliberately simple heuristic.** A fixed 1–3 likelihood × 2–3 impact keeps the math visible. Real teams use richer schemes (CVSS, DREAD, or a calibrated qualitative matrix) and temper them with human judgment and knowledge of *existing controls* — a component with strong mitigations carries less residual risk than the raw score suggests.
-   - **We auto-map risks to component *types*.** A full exercise applies threats per element **and along each data flow** (e.g., STRIDE-per-element), reasons about the specific design, and records the chosen mitigation and the residual risk for each finding — not just that a risk exists. (Our risk register has the OWASP and ATLAS columns; a production one would add a *Mitigation* and *Residual risk* column per row.)
-   - **A real threat model is a living document.** It's revisited whenever the architecture changes and tracked over time — which is exactly what the optional step shows in miniature.
-
-So: treat the **approach** here as production-grade and the **engine** as a teaching scaffold. The natural next step in a real project is to feed a model like this into a dedicated threat-modeling framework — for example **OWASP pytm**, where you define the system in Python and supply a custom threat library — and to layer in mitigations and residual-risk tracking.
 
 <br><br>
 
