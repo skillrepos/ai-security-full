@@ -26,15 +26,7 @@ Click here ➡️  [![Open in GitHub Codespaces](https://github.com/codespaces/b
 
 ![Creating new codespace from button](./images/sl19.png?raw=true "Creating new codespace from button")
 
-This will run for several minutes while it gets everything ready.
-
-After the initial startup, it will run a script to setup the python environment, install needed python pieces, install Ollama, and then download the models we will use. This will take several more minutes to run. It will look like this while this is running.
-
-![Final prep](./images/sl21.png?raw=true "Final prep")
-
-The codespace is ready to use when you see a prompt like the one shown below in its terminal.
-
-![Ready to use](./images/sl23.png?raw=true "Ready to use")
+This will run for several minutes while it gets everything ready. **While this is running, you can do step 4.**
 
 <br><br>
 
@@ -61,9 +53,21 @@ e. **Copy the key** (you can't view it again later).
 
 <br><br>
 
-**5. Setup your groq key in your codespace.**
+**5. Ensure the codespace is done setting up.**
 
-Back in the codespace **TERMINAL**, run the command below to set your key for all terminals. Paste your key when prompted and then hit *Enter*:
+After the initial startup, it will run a script to setup the python environment, install needed python pieces, install Ollama, and then download the models we will use. This will take several more minutes to run. It will look like this while this is running.
+
+![Final prep](./images/sl21.png?raw=true "Final prep")
+
+The codespace is ready to use when you see a prompt like the one shown below in its terminal.
+
+![Ready to use](./images/sl23.png?raw=true "Ready to use")
+
+<br><br>
+
+**6. Setup your groq key in your codespace.**
+
+In the codespace **TERMINAL**, run the command below to set your key for all terminals. Paste your key when prompted and then hit *Enter*:
 
 ```
 source scripts/setup-key.sh
@@ -75,20 +79,15 @@ Afterwards, you should see output that indicates two environment variables (AGEN
 
 <br><br>
 
-**6. Run the *warm-up* script for faster LLM interactions.**
+**7. Run the *warm-up* script for faster LLM interactions.**
 
 ```
-python scripts/warmup.py --embed --keep-alive 300m --auto-pull &
+python scripts/warmup_ollama.py 
 ```
-
-After this runs, you'll see a **READY FOR WORKSHOP!** message. You can just hit `Enter` to get back to a prompt.
-(If you happen to hit an error where the script gets interrupted, just run it again.)
-
-![Run warmup script](./images/sl23.png?raw=true "Run warmup script")
 
 <br><br>
 
-**7. Open up the *labs.md* file so you can follow along with the labs.**
+**8. Open up the *labs.md* file so you can follow along with the labs.**
 You can either open it in a separate browser instance or open it in the codespace. 
 
 <br><br>
