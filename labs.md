@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.0 - 06/20/26
+## Revision 4.2 - 06/20/26
 
 
 **Follow the startup instructions in the README.md file IF NOT ALREADY DONE!**
@@ -342,7 +342,7 @@ Wrapping those hand-built guards, `main()` also calls a **real safety classifier
 code -d ../extra/guardrails_complete.txt guardrails_demo.py
 ```
 
-![Building the guardrails pipeline](./images/fd-l3-1.png?raw=true "Building the guardrails pipeline")
+![Building the guardrails pipeline](./images/sl24.png?raw=true "Building the guardrails pipeline")
 
 <br><br>
 
@@ -370,11 +370,13 @@ python guardrails_demo.py
 
 Each request flows through four layers: **Llama Guard (input) -> your input guards -> the model -> your output guards -> Llama Guard (output)**. The header line shows whether the Llama Guard classifier is `on` (it is when `GROQ_API_KEY` is set). The first request includes a brief model warm-up.
 
+![Input guard results](./images/sl25.png?raw=true "Input guard results")
+
 <br><br>
 
 8. Look at the requests that are stopped at the **input** stage. The legitimate password question passes input screening and is sent to the model. The jailbreak attempt, the off-topic poem request, and the oversized input are each marked **INPUT BLOCKED (never reached the model)**, with the triggering guard named - those prompts never cost you a model call.
 
-![Input guard results](./images/fd-l3-2.png?raw=true "Input guard results")
+![Input guard results](./images/sl26.png?raw=true "Input guard results")
 
 <br><br>
 
