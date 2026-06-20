@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
-# Installs Ollama and pulls the default lab model. Runs once at Codespace
-# creation (postCreateCommand). Safe to re-run.
+# Installs Ollama, ensures the server is running, and makes sure the selected
+# model is present. This script is safe to run from both postCreateCommand and
+# postAttachCommand.
 set -e
 MODEL="${OLLAMA_MODEL:-llama3.2:3b}"
+SKIP_PULL=0
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ "${1:-}" == "--skip-pull" ]]; then
+    SKIP_PULL=1
+fi
 
 if ! command -v ollama >/dev/null 2>&1; then
     echo "[ollama] installing Ollama..."
@@ -16,6 +23,24 @@ if ! curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
     sleep 3
 fi
 
-echo "[ollama] pulling model $MODEL (one-time download)..."
-ollama pull "$MODEL"
-echo "[ollama] ready. Model: $MODEL"
+if [[ "$SKIP_PULL" -eq 1 ]]; then
+    echo "[ollama] skipping model pull check (--skip-pull)"
+else
+    if ollama list 2>/dev/null | awk 'NR>1 {print $1}' | grep -Fx "$MODEL" >/dev/null 2>&1; then
+        echo "[ollama] model already present: $MODEL"
+    else
+        echo "[ollama] pulling model $MODEL (one-time download)..."
+        ollama pull "$MODEL"
+    fi
+
+    if command -v python3 >/dev/null 2>&1; then
+        echo "[ollama] warming up model $MODEL..."
+        if ! python3 "$SCRIPT_DIR/warmup_ollama.py" --model "$MODEL"; then
+            echo "[ollama] warning: warmup failed; startup can continue."
+        fi
+    else
+        echo "[ollama] warning: python3 not found; skipping warmup"
+    fi
+fi
+
+echo "[ollama] ready. Server: http://localhost:11434 | Model: $MODEL"
