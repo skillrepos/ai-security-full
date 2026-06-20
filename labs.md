@@ -1,119 +1,13 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 3.5 - 06/20/26
+## Revision 4.0 - 06/20/26
 
 
 **Follow the startup instructions in the README.md file IF NOT ALREADY DONE!**
 
 **NOTE: To copy and paste in the codespace, you may need to use keyboard commands - CTRL-C and CTRL-V. Chrome may work best for this.**
 
-**New to this material? Start with the short "Start here" section just below, then do Lab 0. Already comfortable with LLMs, RAG, agents, and Codespaces? Skip straight to Lab 1 — everything you need is in each lab.**
-
-These labs use a real AI model that runs **right in your Codespace** — there's nothing to install or sign up for. (A few labs can *optionally* use a faster cloud model; that's a one-minute, take-it-or-leave-it setup described in the README under "Language models.") Because you're talking to a real model, **the exact words it produces will be a little different every time** — and from the screenshots. That's normal and expected: follow what the lab tells you to *look for*, not an exact transcript.
-
----
-
-## Start here: concepts & glossary
-
-> **Already know this stuff? Skip ahead to Lab 0 (or Lab 1).** This is here so nobody gets stuck on a word. You don't need to memorize it — just glance at it, and come back if a term trips you up.
-
-**The big picture, in five sentences.** An **AI model** (specifically an **LLM** — a *large language model*) is a program that reads text and writes text back. We make it more useful by letting it read from our documents (**RAG**) and letting it take actions by calling **tools** (that's an **agent**). The catch: the model can't tell the difference between *your instructions* and *text it just read somewhere* — so a booby-trapped document or message can hijack it. This whole workshop is about that problem and how to defend against it. Each lab shows one attack and the defense for it.
-
-**AI terms (one line each):**
-
-| Term | In plain English |
-|---|---|
-| **LLM / model** | A program that takes in text and produces text. The "brain" everything else wires into. |
-| **prompt** | The text you send the model. |
-| **system prompt** | Hidden setup instructions the app gives the model ("you are a support assistant..."). |
-| **context / context window** | Everything the model can "see" for one request — your prompt **plus** any documents or history fed in with it. |
-| **token** *(AI sense)* | A chunk of text the model reads/writes (roughly a word-piece). *(In Lab 5, "token" means something different — a security pass; see that lab.)* |
-| **RAG** | *Retrieval-Augmented Generation* — fetch relevant documents and put them in the context so the model can answer from your data. |
-| **embedding / vector** | A list of numbers that captures a piece of text's meaning, so similar texts have similar numbers. |
-| **vector database** | A store of those embeddings that finds the most *similar* text to a query (e.g., Chroma). |
-| **chunk** | One small piece of a document (a paragraph) that gets embedded and retrieved. |
-| **agent** | An LLM in a loop that decides which **tools** to call to get something done. |
-| **tool** | A function the agent can call to take an action (look up data, send email, run a query). |
-| **MCP** | *Model Context Protocol* — a standard way to expose tools to an agent (think "USB port for AI tools"). |
-| **prompt injection** | An attack where text the model reads contains hidden instructions that hijack it. |
-| **jailbreak** | A prompt that tricks the model into ignoring its safety rules. |
-| **guardrail** | A check that runs before or after the model to block or clean up bad input/output. |
-| **hallucination** | The model stating something false as if it were true. |
-
-**Security / infrastructure terms you'll meet:**
-
-| Term | In plain English |
-|---|---|
-| **threat model** | A structured list of what could go wrong in a system and what to fix first (Lab 1). |
-| **trust boundary** | A line where less-trusted meets more-trusted (e.g., the internet meets your app). |
-| **PII** | *Personally Identifiable Information* — names, SSNs, card numbers, etc. |
-| **least privilege** | Give something only the access it needs and nothing more. |
-| **regex** | A pattern for matching text (used to spot bad input). |
-| **JWT / token / scope** *(Lab 5)* | A signed "pass" that proves who a caller is and exactly what they're allowed to do. |
-| **CVE** *(Capstone)* | A publicly catalogued known software vulnerability, by ID number. |
-| **OWASP LLM Top 10 / MITRE ATLAS** | Two industry reference lists of AI risks/attacks we map findings to (Lab 1). |
-
-Don't worry about absorbing all of this now — each lab re-introduces the terms it uses, the first time it uses them.
-
-<br><br>
-
-**Lab 0: Before you start — how these labs work**
-
-**Purpose: A five-minute orientation so the *mechanics* never get in the way of the *security*. If you've used GitHub Codespaces and VS Code's diff view before, skim this and move on.**
-
-<br>
-
-1. **Where you are.** You're working in a **GitHub Codespace** — a full development environment running in your browser, so there's nothing to install on your computer. The big panel is the **VS Code editor** (for reading files); the panel along the bottom is the **terminal** (for typing commands). If you don't see the terminal, open it with the menu **Terminal → New Terminal**.
-
-<br><br>
-
-2. **Running a command.** A "command" is a line you type into the terminal and run by pressing **Enter**. Throughout the labs, any line in a grey code box like the one below is something to type (or copy/paste) into the terminal. Try one now — it just prints where you are:
-
-```
-pwd
-```
-
-(Tip: pasting in a browser terminal sometimes needs **CTRL+SHIFT+V**, or right-click → Paste. Chrome works best.)
-
-<br><br>
-
-3. **Opening a file.** When a lab says `code somefile.py`, that's a command that opens that file in the editor so you can read it. You don't have to edit it unless the lab says so. For example:
-
-```
-code labs.md
-```
-
-<br><br>
-
-4. **The pattern every coding lab follows — "skeleton → merge → run".** Most labs hand you a **skeleton** file: the real working code, but with the key security logic *removed* and replaced with `TODO` markers. Your job is to fill that part in by copying it from a **complete reference** (kept in the `extra/` folder). You do this with VS Code's side-by-side **diff-and-merge** view, which the labs open with a command like:
-
-```
-code -d ../extra/something_complete.txt something.py
-```
-
-   - The **left** side is the complete reference; the **right** side is your skeleton.
-   - Each highlighted difference has small **arrows (›)** in the middle bar — click an arrow to copy that block from the left into your file on the right.
-   - When no differences remain, **close the tab** to save. Now the file is complete and you can run it.
-
-   This "fill in the security code, then watch it work" pattern is the heart of every lab. You are *not* expected to write code from scratch.
-
-![The diff-and-merge view](./images/fd-l0-1.png?raw=true "The diff-and-merge view")
-
-<br><br>
-
-5. **Running and stopping programs.** You run a finished Python file with `python filename.py`. Some labs start a **server** (a program that keeps running and waiting) — when you're done with it, stop it by clicking in that terminal and pressing **Ctrl+C**. Some labs run an interactive prompt — type `quit` (or press **Ctrl+C**) to exit. The lab will always tell you which.
-
-<br><br>
-
-6. **How the labs use AI models (reference — you don't need to do anything).** Labs 2, 3, 5, 6, and 7 talk to a real AI model. By default that's **Ollama** running a small model (`llama3.2:3b`) right inside your Codespace — already set up for you. The very first model question of the day takes **30-60 seconds** to "warm up" (it's loading the model — not frozen); after that it's quick. Optionally, if you set a free **Groq** API key (see the README), those labs use a faster cloud model instead — totally optional. Labs 1, 4, and 8 use no model at all. *(Advanced: you can force a specific backend with `export LLM_BACKEND=ollama` — or `groq`, or `mock` for an offline, repeatable stand-in.)*
-
-<br><br>
-
-<p align="center">
-<b>[END OF LAB 0 — you're ready]</b>
-</p>
-<br><br>
 
 **Lab 1: Mapping AI Security Risks**
 
