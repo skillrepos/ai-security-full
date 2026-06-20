@@ -12,7 +12,7 @@
     "customizations": {
         "vscode": {
             "settings": {
-                "python.defaultInterpreterPath": "py_env/bin/python",
+                "python.defaultInterpreterPath": "/workspaces/ai-security-full/py_env/bin/python",
                 "github.copilot.enable": { "*": false },
                 "editor.inlineSuggest.enabled": false,
                 "workbench.startupEditor": "readme",
