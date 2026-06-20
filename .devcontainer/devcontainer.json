@@ -25,5 +25,6 @@
         }
     },
     "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash scripts/startup_ollama.sh",
-    "postAttachCommand": "bash scripts/startOllama.sh"
+    "postAttachCommand": "bash scripts/startup_ollama.sh --skip-pull"
 }
+
