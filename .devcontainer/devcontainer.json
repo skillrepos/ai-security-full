@@ -2,7 +2,8 @@
     "image": "mcr.microsoft.com/devcontainers/base:bookworm",
     "remoteEnv": {
         "OLLAMA_MODEL": "llama3.2:3b",
-        "GROQ_API_KEY": "${localEnv:GROQ_API_KEY}"
+        "GROQ_API_KEY": "${localEnv:GROQ_API_KEY}",
+        "ORT_LOG_SEVERITY_LEVEL": "3"
     },
     "hostRequirements": { "cpus": 4, "memory": "16gb", "storage": "32gb" },
     "features": {
