@@ -21,11 +21,14 @@ Dependency-free: uses only the Python standard library.
 """
 import json
 import os
+import socket
 import urllib.request
 import urllib.error
 
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/chat")
+OLLAMA_TIMEOUT = int(os.environ.get("OLLAMA_TIMEOUT", "300"))
+OLLAMA_RETRIES = int(os.environ.get("OLLAMA_RETRIES", "1"))
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_URL = os.environ.get("GROQ_URL", "https://api.groq.com/openai/v1/chat/completions")
@@ -53,13 +56,20 @@ def _post(url, payload, headers, timeout=120):
 def _ollama(messages, temperature, max_tokens):
     payload = {"model": OLLAMA_MODEL, "messages": messages, "stream": False,
                "options": {"temperature": temperature, "num_predict": max_tokens}}
-    try:
-        resp = _post(OLLAMA_URL, payload, {})
-    except (urllib.error.URLError, ConnectionError) as e:
-        raise RuntimeError(
-            f"Could not reach Ollama at {OLLAMA_URL} ({e}). "
-            "Start it with `bash scripts/startOllama.sh` (or `ollama serve &`).")
-    return resp["message"]["content"].strip()
+    attempts = max(1, OLLAMA_RETRIES + 1)
+    last_error = None
+    for _ in range(attempts):
+        try:
+            resp = _post(OLLAMA_URL, payload, {}, timeout=OLLAMA_TIMEOUT)
+            return resp["message"]["content"].strip()
+        except (urllib.error.URLError, ConnectionError, TimeoutError, socket.timeout) as e:
+            last_error = e
+            continue
+    raise RuntimeError(
+        f"Could not reach Ollama at {OLLAMA_URL} ({last_error}). "
+        f"Tried {attempts} time(s) with timeout={OLLAMA_TIMEOUT}s. "
+        "Start it with `bash scripts/startOllama.sh` (or `ollama serve &`) "
+        "or increase OLLAMA_TIMEOUT.")
 
 
 def _groq(messages, prefer, temperature, max_tokens):
