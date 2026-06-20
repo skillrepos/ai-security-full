@@ -655,6 +655,8 @@ code observable_agent.py
 
 Note the `REQUESTS` list of natural-language `(user, request)` pairs and the `SENSITIVE_TOOLS` set (`export_employee_data`, `send_company_email`, `update_salary`). A **real model** drives the agent: `choose_tool()` asks it (with `prefer="strong"`) to pick one tool per request and return JSON. The provided `build_tracer()` sets up a real **OpenTelemetry** tracer with an in-memory span exporter. Some requests are benign; `mallory` issues a burst of bulk-export requests and `bob` asks for a mass email - your instrumentation has to make all of that visible.
 
+![Observable agent skeleton](./images/sl40.png?raw=true "Observable agent skeleton")
+
 <br><br>
 
 3. Open the diff-and-merge view to add the instrumentation and detector:
@@ -663,7 +665,7 @@ Note the `REQUESTS` list of natural-language `(user, request)` pairs and the `SE
 code -d ../extra/observable_agent_complete.txt observable_agent.py
 ```
 
-![Building the observable agent](./images/fd-l5-1.png?raw=true "Building the observable agent")
+![Building the observable agent](./images/sl41.png?raw=true "Building the observable agent")
 
 <br><br>
 
@@ -691,17 +693,19 @@ python observable_agent.py
 
 7. Look at the stream of **`[AUDIT]`** lines (one per request, after the model picks a tool). Every call is a real OpenTelemetry span sharing a single **trace_id** for the session, each with its own **span_id** - the same trace/span model you'd export to Jaeger, Tempo, or a SIEM. (Tool choices come from a real model, so the exact split of tools may vary slightly run to run.)
 
-![Structured audit stream](./images/fd-l5-2.png?raw=true "Structured audit stream")
+![Structured audit stream](./images/sl42.png?raw=true "Structured audit stream")
 
 <br><br>
 
 8. Look at the **TELEMETRY SUMMARY** - tool spans, sensitive calls, and denied calls, all read back from the captured OpenTelemetry spans. These are the kind of metrics you'd graph on a dashboard.
 
+![Telemetry Summary](./images/sl43.png?raw=true "Telemetry Summary")
+
 <br><br>
 
 9. Look at the **ANOMALY DETECTION** section. The detector flags `mallory`'s denied export attempts, the **BURST** of three rapid export calls, and surfaces every user who touched sensitive tooling for review.
 
-![Anomaly detection](./images/fd-l5-3.png?raw=true "Anomaly detection")
+![Anomaly detection](./images/sl44.png?raw=true "Anomaly detection")
 
 <br><br>
 
