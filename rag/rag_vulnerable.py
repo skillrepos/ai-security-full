@@ -6,7 +6,7 @@ poisoned document) and feeds every retrieved chunk straight to the LLM. Run
 create_db.py first, then run this and ask the questions in the lab to watch
 the poisoned content reach the answer.
 """
-from kb import kb_stats, retrieve, rag_answer
+from kb import kb_stats, retrieve, rag_answer, llm
 
 
 def main():
@@ -15,6 +15,15 @@ def main():
     print(f"Vector DB loaded: {count} chunks from {len(sources)} sources")
     for s in sources:
         print(f"  - {s}")
+
+    # Warm up the LLM backend so the first user question is less likely to time out.
+    print("\nWarming up LLM backend...")
+    try:
+        llm.complete("Reply with OK.", prefer="strong", max_tokens=8)
+        print("LLM warm-up complete.")
+    except Exception as e:
+        print(f"LLM warm-up skipped: {e}")
+
     print("\nType a question (or 'quit').")
 
     while True:
@@ -31,7 +40,11 @@ def main():
         for h in hits:
             print(f"  [{h['relevance']}] {h['source']}")
         print("\nANSWER:")
-        print(rag_answer(q, hits))
+        try:
+            print(rag_answer(q, hits))
+        except Exception as e:
+            print(f"[error] Could not generate answer: {e}")
+            print("Try starting/restarting Ollama with: bash scripts/startOllama.sh")
 
 
 if __name__ == "__main__":
