@@ -762,7 +762,7 @@ Note that, as shipped, `is_blocked()` returns `False` for everything - the agent
 
 <br><br>
 
-4. Run the red-team harness against the **undefended** agent:
+4. Now meet the **red-team harness**, `redteam_runner.py` (provided complete — you don't edit it). It ties the previous two files together: it loads every attack from `attacks.py`, sends each one to the target agent's `handle()` entry point in `target_agent.py`, checks whether the secret leaked into the reply (the `success_marker`), and prints a scorecard of which techniques got through. (Open it with `code redteam_runner.py` if you'd like to see the loop.) Run it against the still-**undefended** agent:
 
 ```
 python redteam_runner.py
