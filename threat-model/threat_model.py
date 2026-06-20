@@ -67,14 +67,12 @@ def build_threat_model(arch):
 # ---- deliverables (provided) --------------------------------------------
 
 def write_dfd(arch, path="architecture_dfd.mmd"):
-    """Write a Mermaid data-flow diagram; boundary-crossing flows use ==>."""
+    """Write a Mermaid .mmd data-flow diagram; boundary-crossing flows use ==>."""
     zone_of = {c["id"]: c["trust_zone"] for c in arch["components"]}
     zones = {}
     for c in arch["components"]:
         zones.setdefault(c["trust_zone"], []).append(c)
-    out = ["# Data-Flow Diagram", "",
-           "Open this file with the Mermaid preview to see the diagram.", "",
-           "```mermaid", "flowchart LR"]
+    out = ["flowchart LR"]
     for z, comps in zones.items():
         out.append(f'  subgraph {z}["{z} zone"]')
         for c in comps:
@@ -83,8 +81,6 @@ def write_dfd(arch, path="architecture_dfd.mmd"):
     for f in arch["data_flows"]:
         arrow = "==>" if zone_of.get(f["from"]) != zone_of.get(f["to"]) else "-->"
         out.append(f'  {f["from"]} {arrow}|{f["data"]}| {f["to"]}')
-    out += ["```", "",
-            "Thick arrows (==>) cross a trust boundary - the highest-priority controls."]
     open(path, "w").write("\n".join(out) + "\n")
     return path
 
