@@ -21,14 +21,11 @@ Dependency-free: uses only the Python standard library.
 """
 import json
 import os
-import socket
 import urllib.request
 import urllib.error
 
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/chat")
-OLLAMA_TIMEOUT = int(os.environ.get("OLLAMA_TIMEOUT", "300"))
-OLLAMA_RETRIES = int(os.environ.get("OLLAMA_RETRIES", "1"))
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_URL = os.environ.get("GROQ_URL", "https://api.groq.com/openai/v1/chat/completions")
@@ -48,7 +45,11 @@ def _resolve(prefer):
 
 def _post(url, payload, headers, timeout=120):
     data = json.dumps(payload).encode()
-    req = urllib.request.Request(url, data, {"Content-Type": "application/json", **headers})
+    # A real User-Agent is required: the bot/WAF layer in front of Groq's API
+    # returns 403 Forbidden for the default "Python-urllib/x.y" agent (even with
+    # a valid key and an allowed model). curl works because it sends its own UA.
+    base = {"Content-Type": "application/json", "User-Agent": "ai-security-labs/1.0"}
+    req = urllib.request.Request(url, data, {**base, **headers})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
 
@@ -56,20 +57,13 @@ def _post(url, payload, headers, timeout=120):
 def _ollama(messages, temperature, max_tokens):
     payload = {"model": OLLAMA_MODEL, "messages": messages, "stream": False,
                "options": {"temperature": temperature, "num_predict": max_tokens}}
-    attempts = max(1, OLLAMA_RETRIES + 1)
-    last_error = None
-    for _ in range(attempts):
-        try:
-            resp = _post(OLLAMA_URL, payload, {}, timeout=OLLAMA_TIMEOUT)
-            return resp["message"]["content"].strip()
-        except (urllib.error.URLError, ConnectionError, TimeoutError, socket.timeout) as e:
-            last_error = e
-            continue
-    raise RuntimeError(
-        f"Could not reach Ollama at {OLLAMA_URL} ({last_error}). "
-        f"Tried {attempts} time(s) with timeout={OLLAMA_TIMEOUT}s. "
-        "Start it with `bash scripts/startOllama.sh` (or `ollama serve &`) "
-        "or increase OLLAMA_TIMEOUT.")
+    try:
+        resp = _post(OLLAMA_URL, payload, {})
+    except (urllib.error.URLError, ConnectionError) as e:
+        raise RuntimeError(
+            f"Could not reach Ollama at {OLLAMA_URL} ({e}). "
+            "Start it with `bash scripts/startOllama.sh` (or `ollama serve &`).")
+    return resp["message"]["content"].strip()
 
 
 def _groq(messages, prefer, temperature, max_tokens):
@@ -82,8 +76,12 @@ def _groq(messages, prefer, temperature, max_tokens):
         if e.code == 429:
             raise RuntimeError("Groq rate limit hit (HTTP 429). Wait a few seconds "
                                "and retry, or set LLM_BACKEND=ollama.")
-        raise RuntimeError(f"Groq request failed ({e.code}). Check GROQ_API_KEY "
-                           f"and the model id ({model}).")
+        try:
+            body = e.read().decode()[:300]
+        except Exception:
+            body = ""
+        raise RuntimeError(f"Groq request failed ({e.code}) for model {model}. "
+                           f"Response: {body or '(no body)'}")
     return resp["choices"][0]["message"]["content"].strip()
 
 
