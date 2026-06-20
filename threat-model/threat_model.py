@@ -66,7 +66,7 @@ def build_threat_model(arch):
 
 # ---- deliverables (provided) --------------------------------------------
 
-def write_dfd(arch, path="architecture_dfd.md"):
+def write_dfd(arch, path="architecture_dfd.mmd"):
     """Write a Mermaid data-flow diagram; boundary-crossing flows use ==>."""
     zone_of = {c["id"]: c["trust_zone"] for c in arch["components"]}
     zones = {}
