@@ -17,4 +17,3 @@ if ! curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
     sleep 3
 fi
 echo "[ollama] server is up at http://localhost:11434"
-
