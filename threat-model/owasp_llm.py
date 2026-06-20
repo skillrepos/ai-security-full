@@ -16,6 +16,10 @@ Each entry: id, name, short description, the component "tags" the risk applies
 to, and the mapped ATLAS technique ids.
 """
 
+# Mapping table: OWASP LLM risk -> where it applies -> MITRE ATLAS technique ids.
+# How to read one row (plain English):
+# "LLM01 Prompt Injection applies to llm/agent/rag/tool/ui, and maps to
+# ATLAS AML.T0051, which is the prompt-injection attack technique."
 OWASP_LLM_2025 = [
     {"id": "LLM01", "name": "Prompt Injection",
      "desc": "Crafted input overrides developer instructions or hijacks agent goals.",
@@ -59,6 +63,10 @@ OWASP_LLM_2025 = [
      "atlas": ["AML.T0029", "AML.T0034"]},           # Denial of ML Service; Cost Harvesting
 ]
 
+# Mapping table: component type -> base likelihood score and rationale note.
+# How to read one row (plain English):
+# "ui has likelihood 3 because it is internet-facing, so it is treated as
+# more exposed than an internal-only component like datastore."
 # Likelihood/impact weights per component type (1-3 scale).
 # Used to compute a simple risk score for the attack-surface matrix.
 COMPONENT_EXPOSURE = {
