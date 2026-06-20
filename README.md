@@ -34,7 +34,7 @@ After the initial startup, it will run a script to setup the python environment,
 
 The codespace is ready to use when you see a prompt like the one shown below in its terminal.
 
-![Ready to use](./images/sl22.png?raw=true "Ready to use")
+![Ready to use](./images/sl23.png?raw=true "Ready to use")
 
 <br><br>
 
@@ -93,7 +93,7 @@ You can either open it in a separate browser instance or open it in the codespac
 
 <br><br>
 
-![Opening labs](./images/aip4.png?raw=true "Opening labs")
+![Opening labs](./images/sl22.png?raw=true "Opening labs")
 
 **Now, you are ready for the labs!**
 
