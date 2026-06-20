@@ -180,7 +180,8 @@ def run_agent(plan, controls_on, label):
             continue
         result = TOOL_FUNCS[tool](args)
         executed.append(tool)
-        print(f"[{i}] {tool:<14} OK   -> {str(result)[:72]}")
+        shown = " ".join(str(result).split())   # collapse newlines; show in full
+        print(f"[{i}] {tool:<14} OK   -> {shown}")
     breached = sorted(set(executed) & HIGH_RISK_TOOLS)
     verdict = f"BREACH: {breached}" if breached else "contained (no high-risk tool fired)"
     print(f"    => {verdict}\n")
@@ -193,17 +194,20 @@ def main():
     print(f"The real model, reading the poisoned ticket, proposed: "
           f"{[t for t, _ in model_plan] or '(no valid JSON this run)'}\n")
     run_agent(plan, controls_on=False, label="UNDEFENDED AGENT")
-    # Are the three controls actually implemented yet? (skeleton = no-ops)
+    # Don't show a "secured" pass until the three controls are actually built.
+    # In the skeleton they're no-ops, so a secured pass would just be an identical
+    # breach -- pointless and confusing. It appears once the controls are real.
     active = allowed_tools(TASK) != ALL_TOOLS or not within_budget(MAX_STEPS, [])
     if not active:
-        print("NOTE: the three controls aren't implemented yet, so the 'secured' run\n"
-              "      below behaves exactly like the undefended one -- both BREACH.\n"
-              "      Merge allowed_tools / approve / within_budget from\n"
-              "      extra/secure_agent_complete.txt, then re-run to see it contained.\n")
-    label = ("SECURED AGENT (least privilege + approval + budgets)" if active
-             else "SECURED AGENT (controls NOT implemented yet -- see note above)")
-    run_agent(plan, controls_on=True, label=label)
+        print("The three controls aren't implemented yet, so there's nothing to secure the\n"
+              "agent with -- only the undefended run is shown above. Merge allowed_tools /\n"
+              "approve / within_budget from extra/secure_agent_complete.txt and re-run: a\n"
+              "SECURED pass will then appear and contain this same attack.\n")
+        return
+    run_agent(plan, controls_on=True,
+              label="SECURED AGENT (least privilege + approval + budgets)")
 
 
 if __name__ == "__main__":
     main()
+
