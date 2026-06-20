@@ -285,7 +285,11 @@ So: treat the **approach** here as production-grade and the **engine** as a teac
 1. From the terminal, change to the *rag* directory:
 
 ```
-cd /workspaces/ai-security/rag
+cd ../rag
+
+or
+
+cd /workspaces/ai-security-full/rag
 ```
 
 <br><br>
