@@ -20,13 +20,6 @@
                 "files.associations": { "*.mmd": "mermaid" },
                 "terminal.integrated.defaultProfile.linux": "bash"
             },
-            "keybindings": [
-                {
-                    "key": "ctrl+alt+m",
-                    "command": "preview.mermaidChart.preview",
-                    "when": "editorTextFocus && resourceExtname == .mmd"
-                }
-            ],
             "extensions": ["vstirbu.vscode-mermaid-preview"]
         }
     },
