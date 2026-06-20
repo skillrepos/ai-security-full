@@ -30,11 +30,11 @@ This will run for several minutes while it gets everything ready.
 
 After the initial startup, it will run a script to setup the python environment, install needed python pieces, install Ollama, and then download the models we will use. This will take several more minutes to run. It will look like this while this is running.
 
-![Final prep](./images/aip2.png?raw=true "Final prep")
+![Final prep](./images/sl21.png?raw=true "Final prep")
 
 The codespace is ready to use when you see a prompt like the one shown below in its terminal.
 
-![Ready to use](./images/aip3.png?raw=true "Ready to use")
+![Ready to use](./images/sl22.png?raw=true "Ready to use")
 
 <br><br>
 
@@ -84,7 +84,7 @@ python scripts/warmup.py --embed --keep-alive 300m --auto-pull &
 After this runs, you'll see a **READY FOR WORKSHOP!** message. You can just hit `Enter` to get back to a prompt.
 (If you happen to hit an error where the script gets interrupted, just run it again.)
 
-![Run warmup script](./images/aip22.png?raw=true "Run warmup script")
+![Run warmup script](./images/sl23.png?raw=true "Run warmup script")
 
 <br><br>
 
