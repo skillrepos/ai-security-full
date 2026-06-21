@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.3 - 06/20/26
+## Revision 4.10 - 06/21/26
 
 
 **Follow the startup instructions in the README.md file IF NOT ALREADY DONE!**
@@ -957,7 +957,7 @@ code app/app.py Dockerfile app/requirements_app.txt
 
 Notice the **hardcoded secrets** in `app.py`, the Dockerfile using **`FROM python:latest`** with **no `USER` directive** (runs as root), and **outdated dependency versions** in the requirements file.
 
-![Reviewing the deployment artifacts](./images/fd-l8-1.png?raw=true "Reviewing the deployment artifacts")
+![Reviewing the deployment artifacts](./images/sl58.png?raw=true "Reviewing the deployment artifacts")
 
 <br><br>
 
@@ -968,6 +968,8 @@ code cve_db.json compliance_rules.json
 ```
 
 `cve_db.json` is a small offline vulnerability database (no network needed). `compliance_rules.json` lists the **required controls**, each marked blocking - every one must pass before release.
+
+![Reviewing the data files](./images/sl59.png?raw=true "Reviewing the data files")
 
 <br><br>
 
@@ -987,7 +989,7 @@ The scanners are stubbed out. You'll implement secret scanning, Dockerfile linti
 code -d ../extra/security_gate_complete.txt security_gate.py
 ```
 
-![Building the security gate](./images/fd-l8-2.png?raw=true "Building the security gate")
+![Building the security gate](./images/sl60.png?raw=true "Building the security gate")
 
 <br><br>
 
@@ -1009,13 +1011,12 @@ code -d ../extra/security_gate_complete.txt security_gate.py
 python security_gate.py
 ```
 
-✓ **Success looks like:** the report lists four **[FAIL]** controls (hardcoded secrets, root container, unpinned base image, HIGH-severity CVEs) and one **[PASS]** (signed artifact), ending `Blocking failures: 4` and `RESULT: DEPLOYMENT BLOCKED`. If every control PASSes on this first run, a scanner didn't merge — reopen the diff at Step 5.
 
 <br><br>
 
 9. Look at the gate report. Four blocking controls **FAIL**: hardcoded secrets, root container, unpinned base image, and HIGH-severity dependency CVEs. The artifact is signed (you'll see the SHA-256 and signature, and a `release_manifest.json` is written), but the final result is **DEPLOYMENT BLOCKED**. (Run `echo $?` to confirm the non-zero exit code a pipeline would catch.)
 
-![Deployment blocked](./images/fd-l8-3.png?raw=true "Deployment blocked")
+![Deployment blocked](./images/sl61.png?raw=true "Deployment blocked")
 
 <br><br>
 
@@ -1023,6 +1024,8 @@ python security_gate.py
    - In `app/app.py`, replace the hardcoded `API_KEY`/`DB_PASSWORD` with `os.environ.get(...)` lookups.
    - In `Dockerfile`, pin the base image (for example `FROM python:3.12-slim`) and add a non-root user (`RUN useradd -m appuser` and `USER appuser`).
    - In `app/requirements_app.txt`, bump the versions past the fixes listed in `cve_db.json` (for example `requests==2.32.0`, `pyyaml==6.0.1`, `flask==2.2.5`).
+
+![Updating content](./images/sl62.png?raw=true "Updating content")
 
 <br><br>
 
@@ -1032,11 +1035,9 @@ python security_gate.py
 python security_gate.py
 ```
 
-✓ **Success looks like:** all five controls show **[PASS]** and the result is **CLEARED FOR RELEASE** with a zero exit code (`echo $?` → `0`). If it's still **DEPLOYMENT BLOCKED**, one of the three fixes in Step 10 is incomplete — the named failing control tells you which file to revisit.
-
 All five controls now **PASS** and the result is **CLEARED FOR RELEASE** with a zero exit code. The same gate that blocked the insecure build now lets the hardened one through.
 
-![Cleared for release](./images/fd-l8-4.png?raw=true "Cleared for release")
+![Cleared for release](./images/sl63.png?raw=true "Cleared for release")
 
 <br><br>
 
