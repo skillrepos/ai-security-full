@@ -847,6 +847,8 @@ code security_policy.yaml
 
 This is the single source of truth for what the agent may do: an `allowed_tools` allowlist, a `denied_tools` blocklist, permitted `allowed_query_types`, `data_scopes` (PII access on/off, in-scope departments), and `limits` (max requests per session). Notice there is no application logic here - just policy.
 
+![Security policy](./images/sl50.png?raw=true "Security policy")
+
 <br><br>
 
 3. Open the policy engine skeleton:
@@ -857,6 +859,8 @@ code policy_engine.py
 
 The engine loads the YAML and exposes a `check(req)` method that every request must pass before any tool runs.
 
+![Policy engine](./images/sl51.png?raw=true "Policy engine")
+
 <br><br>
 
 4. Open the diff-and-merge view to implement the enforcement logic:
@@ -865,11 +869,13 @@ The engine loads the YAML and exposes a `check(req)` method that every request m
 code -d ../extra/policy_engine_complete.txt policy_engine.py
 ```
 
-![Building the policy engine](./images/fd-l7-1.png?raw=true "Building the policy engine")
+![Building the policy engine](./images/sl52.png?raw=true "Building the policy engine")
 
 <br><br>
 
 5. Review the `check()` method in the complete version. It enforces, in order: the **rate limit**, the **tool deny-list then allow-list**, the **query-type allow-list**, and the **data scopes** (block PII access when `allow_pii` is false, block out-of-scope departments). Each rejection returns a clear reason.
+
+![The check method](./images/sl53.png?raw=true "The check method")
 
 <br><br>
 
@@ -883,11 +889,9 @@ code -d ../extra/policy_engine_complete.txt policy_engine.py
 python policy_engine.py
 ```
 
-✓ **Success looks like:** the six requests print with **[ALLOW]** on the two benign ones (each followed by a `-> model:` reply) and **[DENY]** on the other four, each denial naming the rule it hit (denied tool, PII scope, out-of-scope department); the summary reads `Allowed: 2   Denied: 4`. If everything is allowed or you see `NotImplementedError`, the `check()` logic didn't merge — reopen the diff at Step 4.
-
 Each of the six requests is evaluated against the policy *before* anything else happens. **ALLOW**ed requests are then sent to a real model (you'll see `-> model:` with its reply); **DENY**ed requests never reach the model at all, and each denial reason maps directly to a rule in the YAML (denied tool, PII scope, out-of-scope department). The first allowed request includes a brief model warm-up.
 
-![Policy decisions](./images/fd-l7-2.png?raw=true "Policy decisions")
+![Policy decisions](./images/sl54.png?raw=true "Policy decisions")
 
 <br><br>
 
@@ -896,6 +900,8 @@ Each of the six requests is evaluated against the policy *before* anything else 
 ```
 code security_policy.yaml
 ```
+
+![Editing policy decisions](./images/sl55.png?raw=true "Editing policy decisions")
 
 <br><br>
 
@@ -907,11 +913,14 @@ python policy_engine.py
 
 The **Read SSN** request that was previously denied is now **ALLOWed** - the behavior changed because the *policy* changed, not the application. This is the essence of security as code.
 
-![Policy change takes effect](./images/fd-l7-3.png?raw=true "Policy change takes effect")
+![Policy change takes effect](./images/sl56.png?raw=true "Policy change takes effect")
 
 <br><br>
 
 10. Try one more policy change. In `security_policy.yaml`, set `max_requests_per_session: 3`, save, and re-run. Now the later requests are denied with `rate limit exceeded for session` - runtime governance enforced straight from the policy file. (Set `allow_pii` back to `false` and the limit back to `6` when you're done if you want the original behavior.)
+
+
+![Policy change takes effect](./images/sl57.png?raw=true "Policy change takes effect")
 
 <br><br>
 
