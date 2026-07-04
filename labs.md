@@ -1045,8 +1045,34 @@ python security_gate.py
 
 10. Now remediate the findings. Make these fixes:
    - In `app/app.py`, replace the hardcoded `API_KEY`/`DB_PASSWORD` with `os.environ.get(...)` lookups.
+
+```
+API_KEY = os.environ.get("API_KEY")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+```
+  
    - In `Dockerfile`, pin the base image (for example `FROM python:3.12-slim`) and add a non-root user (`RUN useradd -m appuser` and `USER appuser`).
+
+```
+FROM python:3.12-slim
+
+COPY . /app
+WORKDIR /app
+
+RUN pip install -r app/requirements_app.txt
+RUN useradd -m appuser
+USER appuser
+
+CMD ["python", "app/app.py"]
+```
+
    - In `app/requirements_app.txt`, bump the versions past the fixes listed in `cve_db.json` (for example `requests==2.32.0`, `pyyaml==6.0.1`, `flask==2.2.5`).
+
+```
+flask==2.2.5
+requests==2.32.0
+pyyaml==6.0.1
+```
 
 ![Updating content](./images/sl62.png?raw=true "Updating content")
 
