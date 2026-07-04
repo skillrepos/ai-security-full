@@ -195,7 +195,7 @@ cd ../rag
 
 or
 
-cd /workspaces/ai-security-full-full/rag
+cd /workspaces/ai-security-full/rag
 ```
 
 <br><br>
