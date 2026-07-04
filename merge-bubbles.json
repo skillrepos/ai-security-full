@@ -1,0 +1,33 @@
+{
+  "files": {
+    "extra/target_agent_complete.py": [
+      {
+        "anchor": "HIJACK_PATTERNS = [",
+        "endAnchor": "]",
+        "title": "Hijack detection patterns",
+        "note": [
+          "These are the **simple regex patterns** the undefended agent uses to try to detect prompt injection and hijacking attempts.",
+          "",
+          "Each pattern matches a common attack phrasing, such as:",
+          "- `ignore your instructions` — classic instruction override",
+          "- `you are now ...bot` — persona hijack",
+          "- `repeat everything above` — system prompt extraction",
+          "",
+          "In the next lab section you'll see why regex-only defenses are easy to bypass."
+        ]
+      },
+      {
+        "anchor": "RESTRICTED_INTENT = [",
+        "lines": 2,
+        "title": "Restricted intents",
+        "note": "Intents an HR assistant should **never act on** from user input: anything touching SSNs, bulk export, or mass email. These run as a second filter after the hijack patterns."
+      },
+      {
+        "anchor": "TARGET_SYSTEM = (",
+        "endAnchor": ")",
+        "title": "Target system prompt",
+        "note": "The system prompt for the vulnerable agent. Note the *confidential canary value* (the fake SSN) planted here — attacks succeed if they get the model to leak it."
+      }
+    ]
+  }
+}

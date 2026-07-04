@@ -25,6 +25,8 @@
         }
     },
     "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash scripts/startup_ollama.sh",
-    "postAttachCommand": "bash scripts/startup_ollama.sh --skip-pull"
+    "postAttachCommand": {
+        "ollama": "bash scripts/startup_ollama.sh --skip-pull",
+        "merge-bubble": "code --install-extension ${containerWorkspaceFolder}/.devcontainer/merge-bubble-0.1.0.vsix || true"
+    }
 }
-
