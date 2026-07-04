@@ -195,7 +195,7 @@ cd ../rag
 
 or
 
-cd /workspaces/ai-security-full/rag
+cd /workspaces/ai-security-full-full/rag
 ```
 
 <br><br>
@@ -342,7 +342,7 @@ This time the poisoned chunks are blocked at the source-allowlist stage, and any
 1. From the terminal, change to the *guardrails* directory:
 
 ```
-cd /workspaces/ai-security/guardrails
+cd /workspaces/ai-security-full/guardrails
 ```
 
 <br><br>
@@ -441,7 +441,7 @@ Each request flows through four layers: **Llama Guard (input) -> your input guar
 1. From the terminal, change to the *agents* directory:
 
 ```
-cd /workspaces/ai-security/agents
+cd /workspaces/ai-security-full/agents
 ```
 
 <br><br>
@@ -545,7 +545,7 @@ python secure_agent.py
 1. From the terminal, change to the *mcp* directory:
 
 ```
-cd /workspaces/ai-security/mcp
+cd /workspaces/ai-security-full/mcp
 ```
 
 <br><br>
@@ -605,7 +605,7 @@ You should see `FastMCP server on http://127.0.0.1:8000/mcp/` and the list of sc
 7. **Terminal 2 (client).** Open a new terminal (click the `+` in the terminal panel), then run the client:
 
 ```
-cd /workspaces/ai-security/mcp
+cd /workspaces/ai-security-full/mcp
 python client.py
 ```
 
@@ -665,7 +665,7 @@ You'll see `'scope': 'tools:add'` - confirming the limited client's token never 
 1. From the terminal, change to the *observability* directory:
 
 ```
-cd /workspaces/ai-security/observability
+cd /workspaces/ai-security-full/observability
 ```
 
 <br><br>
@@ -756,7 +756,7 @@ python observable_agent.py
 1. From the terminal, change to the *redteam* directory:
 
 ```
-cd /workspaces/ai-security/redteam
+cd /workspaces/ai-security-full/redteam
 ```
 
 <br><br>
@@ -857,7 +857,7 @@ python redteam_runner.py
 1. From the terminal, change to the *governance* directory:
 
 ```
-cd /workspaces/ai-security/governance
+cd /workspaces/ai-security-full/governance
 ```
 
 <br><br>
@@ -967,7 +967,7 @@ The **Read SSN** request that was previously denied is now **ALLOWed** - the beh
 1. From the terminal, change to the *deploy* directory:
 
 ```
-cd /workspaces/ai-security/deploy
+cd /workspaces/ai-security-full/deploy
 ```
 
 <br><br>
