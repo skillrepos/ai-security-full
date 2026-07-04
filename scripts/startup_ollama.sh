@@ -7,12 +7,31 @@ MODEL="${OLLAMA_MODEL:-llama3.2:3b}"
 SKIP_PULL=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+ensure_zstd() {
+    if command -v zstd >/dev/null 2>&1; then
+        return
+    fi
+
+    echo "[ollama] installing zstd..."
+    if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+        sudo apt-get update
+        sudo apt-get install -y zstd
+    elif [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+        apt-get update
+        apt-get install -y zstd
+    else
+        echo "[ollama] error: zstd is required to install Ollama. Install it with sudo apt-get install -y zstd and retry."
+        exit 1
+    fi
+}
+
 if [[ "${1:-}" == "--skip-pull" ]]; then
     SKIP_PULL=1
 fi
 
 if ! command -v ollama >/dev/null 2>&1; then
     echo "[ollama] installing Ollama..."
+    ensure_zstd
     curl -fsSL https://ollama.com/install.sh | sh
 fi
 
