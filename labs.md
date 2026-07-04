@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.10 - 06/21/26
+## Revision 4.11 - 07/04/26
 
 
 **Follow the startup instructions in the README.md file IF NOT ALREADY DONE!**
@@ -20,6 +20,9 @@
 **The big idea, in one line:** take a description of the system, match each part to a list of known AI risks, score those risks, and sort them — so you end up with a *prioritized to-do list* instead of a vague worry. That's all the engine does.
 
 **The files in the *threat-model* directory and what each is for:**
+
+**An analogy to keep in mind: a home inspection.** An inspector shows up with two things — the **floor plan** of your house and a **checklist** of known problems (leaky roofs, bad wiring). They walk every room, check each item that applies, and hand you a **repair list, worst problem first**. Lab 1 is exactly that, and each file plays one of those roles:
+
 
 | File | Role |
 |---|---|
@@ -52,6 +55,22 @@ This describes the **OmniTech Customer Support AI Assistant** as structured data
    - **`components`** — every part of the system. Each has a **`type`** (`ui`, `llm`, `rag`, `agent`, `tool`, `mcp`, `datastore`, or `deploy`) — this is the key the engine uses to look up which risks apply — a **`trust_zone`** (`public`, `app`, or `internal`) saying how exposed it is, and a **`handles_pii`** flag that raises the impact of a compromise.
    - **`data_flows`** — how information moves between components (for example, `web_ui -> chat_llm`). These are the paths an attacker's input can travel.
    - **`trust_boundaries`** — where one trust zone meets another (the internet edge between `public` and `app`, and the app-to-data boundary between `app` and `internal`). These are the lines an attacker has to cross, so controls matter most here.
+
+
+**Trust zones, in one picture** — think of an airport: the curb (anyone can walk up), the terminal (ticketed passengers only), and the tarmac (staff only). The checkpoints *between* those areas are the trust boundaries — and that's where the scanners go:
+ 
+```
+  PUBLIC zone        |            APP zone                     |     INTERNAL zone
+  (anyone on the     |      (your code & model)                |     (data & privileged tools)
+   internet)         |                                         |
+                     |                                         |
+  web_ui --------------> chat_llm -> support_agent -> mcp_gateway ----> account_tool -> crm_db
+                     ^                                         ^
+              trust boundary #1                         trust boundary #2
+```
+ 
+(The JSON also has `chat_llm -> rag_kb -> doc_store`, `mcp_gateway -> ticket_tool`, and `ci_pipeline -> chat_llm` — and every arrow that crosses a `|` line above is a boundary crossing.)
+
 
 This is just a model of the system — change the JSON and the threat model changes with it (you'll try that at the end).
 
@@ -111,11 +130,15 @@ python threat_model.py
 
 ![Threat model output](./images/sl5.png?raw=true "Threat model output")
 
+
+✓ **Find this one row** (it's the worked example from the slides): `support_agent` × `LLM06 Excessive Agency`. It scores likelihood **3** (an `agent` is highly exposed) × impact **3** (it handles PII, and LLM06 is one of the two top-damage risks) = **9 → HIGH**, so it sits at or near the very top. If you can explain why that row scores 9, you understand the entire engine — every other row is the same lookup and math with different numbers. Notice that the `support_agent` component dominates the top with multiple **HIGH** rows — it is an `agent` (likelihood 3) that handles PII (impact 3), so its applicable risks score 9. That matches the real world: an agent that acts autonomously and calls tools is the largest attack surface in this system. The ATLAS column ties each finding to a real, documented attack technique you can look up at atlas.mitre.org.
+
 <br><br>
 
 8. Look at the **TRUST BOUNDARY CROSSINGS** section. These are the data flows that move between trust zones (for example, `web_ui -> chat_llm` crosses the internet edge). These crossings are where you should concentrate your strongest controls.
 
 ![Trust boundary crossings](./images/sl6.png?raw=true "Trust boundary crossings")
+
 
 <br><br>
 
