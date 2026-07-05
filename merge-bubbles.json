@@ -1,32 +1,223 @@
+
 {
   "files": {
-    "extra/target_agent_complete.py": [
+    "extra/threat_model_complete.txt": [
       {
-        "anchor": "HIJACK_PATTERNS = [",
-        "endAnchor": "]",
-        "title": "Hijack detection patterns",
+        "anchor": "ctype = component[\"type\"]",
+        "title": "map_risks() lookup",
         "note": [
-          "These are the **simple regex patterns** the undefended agent uses to try to detect prompt injection and hijacking attempts.",
-          "",
-          "Each pattern matches a common attack phrasing, such as:",
-          "- `ignore your instructions` — classic instruction override",
-          "- `you are now ...bot` — persona hijack",
-          "- `repeat everything above` — system prompt extraction",
-          "",
-          "In the next lab section you'll see why regex-only defenses are easy to bypass."
+          "**Filters the OWASP LLM Top-10 list to risks that apply to this component type.**",
+          "- Each risk's applies_to lists the component types it threatens"
         ]
       },
       {
-        "anchor": "RESTRICTED_INTENT = [",
-        "lines": 2,
-        "title": "Restricted intents",
-        "note": "Intents an HR assistant should **never act on** from user input: anything touching SSNs, bulk export, or mass email. These run as a second filter after the hijack patterns."
+        "anchor": "likelihood = COMPONENT_EXPOSURE.get(component[\"type\"], {}).get(\"likelihood\", 1)",
+        "title": "score() risk math",
+        "note": [
+          "**Computes likelihood x impact, then bands it LOW / MEDIUM / HIGH.**",
+          "- Likelihood comes from component exposure; handling PII raises impact",
+          "- LLM02/LLM06 (leakage risks) get an extra impact bump"
+        ]
+      }
+    ],
+    "extra/rag_hardened_complete.txt": [
+      {
+        "anchor": "TRUSTED_SOURCES = {\"account_security_handbook.pdf\", \"returns_policy.pdf\"}",
+        "title": "Trusted source allowlist",
+        "note": [
+          "**Only chunks from these two PDFs are trusted - provenance filtering.**",
+          "- The poisoned document isn't on the list, so it gets dropped"
+        ]
       },
       {
-        "anchor": "TARGET_SYSTEM = (",
-        "endAnchor": ")",
-        "title": "Target system prompt",
-        "note": "The system prompt for the vulnerable agent. Note the *confidential canary value* (the fake SSN) planted here — attacks succeed if they get the model to leak it."
+        "anchor": "INJECTION_PATTERNS = [",
+        "endAnchor": "RELEVANCE_MIN = 0.10",
+        "title": "Filter patterns and thresholds",
+        "note": [
+          "**Three tunables: injection phrases to block, bad output to redact, minimum relevance.**",
+          "- Regex lists are a first layer, not a complete defense",
+          "- RELEVANCE_MIN drops barely-related chunks attackers rely on"
+        ]
+      },
+      {
+        "anchor": "kept = []",
+        "title": "Chunk filtering gatekeeper",
+        "note": [
+          "**Drops any chunk that's untrusted, matches an injection pattern, or scores low relevance.**",
+          "- Each rejection logs a BLOCKED reason - watch for these in the run"
+        ]
+      },
+      {
+        "anchor": "for p in BAD_OUTPUT_PATTERNS:",
+        "title": "Output redaction pass",
+        "note": [
+          "**Scrubs responses: any BAD_OUTPUT_PATTERNS match becomes [REDACTED].**",
+          "- Last line of defense if an injection slips through"
+        ]
+      }
+    ],
+    "extra/guardrails_complete.txt": [
+      {
+        "anchor": "JAILBREAK_PATTERNS = [",
+        "endAnchor": "\"shipping\", \"support\", \"product\", \"omnitech\"]",
+        "title": "Jailbreak patterns, topic allowlist",
+        "note": [
+          "**Regexes for common jailbreak phrasing, plus the topics this bot may discuss.**",
+          "- Allowlist beats blocklist: anything off-topic is refused by default"
+        ]
+      },
+      {
+        "anchor": "for p in JAILBREAK_PATTERNS:",
+        "title": "guard_jailbreak() check",
+        "note": "**Rejects input matching any jailbreak regex, reporting which pattern hit.**"
+      },
+      {
+        "anchor": "if any(t in text.lower() for t in ALLOWED_TOPICS):",
+        "title": "guard_topic() allowlist check",
+        "note": "**Passes input only if it mentions an allowed topic - otherwise refused as off-topic.**"
+      },
+      {
+        "anchor": "if len(text) > MAX_INPUT_CHARS:",
+        "title": "guard_length() size cap",
+        "note": "**Rejects oversized input - cheap defense against prompt stuffing and abuse.**"
+      },
+      {
+        "anchor": "PII_PATTERNS = {",
+        "endAnchor": "BANNED_OUTPUT = [r\"here is how to make\", r\"http://\", r\"\\bpassword is\\b\"]",
+        "title": "PII and banned-output patterns",
+        "note": "**Regexes for SSNs, cards, emails, phones, plus phrases the bot must never emit.**"
+      },
+      {
+        "anchor": "fixed = text",
+        "title": "guard_pii() redaction",
+        "note": [
+          "**Replaces each PII match with a [LABEL-REDACTED] tag instead of blocking outright.**",
+          "- Returns the fixed text so the user still gets an answer"
+        ]
+      },
+      {
+        "anchor": "for p in BANNED_OUTPUT:",
+        "title": "guard_banned() output check",
+        "note": "**Blocks responses matching banned patterns (exploit how-tos, raw http:// links, leaked passwords).**"
+      },
+      {
+        "anchor": "INPUT_GUARDS = [guard_length, guard_jailbreak, guard_topic]",
+        "title": "Wiring guards into pipeline",
+        "note": "**Registers your guards in order: length, jailbreak, topic on input; PII, banned on output.**"
+      }
+    ],
+    "extra/secure_agent_complete.txt": [
+      {
+        "anchor": "return {\"read_ticket\", \"summarize\", \"send_email\"}",
+        "title": "Least-privilege tool set",
+        "note": [
+          "**The whole control: export_data and delete_records are simply never offered.**",
+          "- A hijacked plan calling them is refused before it starts"
+        ]
+      },
+      {
+        "anchor": "if tool not in HIGH_RISK_TOOLS:",
+        "title": "Approval gate logic",
+        "note": [
+          "**Low-risk tools pass; high-risk tools go to an operator, who denies here.**",
+          "- In production this would prompt a real human"
+        ]
+      },
+      {
+        "anchor": "return steps_taken < MAX_STEPS",
+        "title": "Budget cap check",
+        "note": [
+          "**One comparison: stop the run once MAX_STEPS actions have been attempted.**",
+          "- Contains loops and escalation even if every other control fails"
+        ]
+      }
+    ],
+    "extra/secure_server_complete.txt": [
+      {
+        "anchor": "scopes = claims.get(\"scope\", \"\").split()",
+        "title": "Per-tool scope check",
+        "note": [
+          "**Rejects calls whose token lacks the tools:<name> scope - raises a 403 ToolError.**",
+          "- Auth says who you are; this enforces what you may call"
+        ]
+      }
+    ],
+    "extra/observable_agent_complete.txt": [
+      {
+        "anchor": "with tracer.start_as_current_span(\"tool.call\") as span:",
+        "title": "Span-instrumented tool call",
+        "note": [
+          "**Wraps every tool call in an OTel span with user, tool, sensitive, and status attributes.**",
+          "- Denied calls get ERROR status - the anomaly detector reads this",
+          "- Prints one [AUDIT] line per request with trace/span ids"
+        ]
+      },
+      {
+        "anchor": "findings = []",
+        "title": "Anomaly detection rules",
+        "note": [
+          "**Three detectors over captured spans: denied sensitive calls, bursts (3+), sensitive-tool review list.**",
+          "- Produces the ANOMALY DETECTION block in the lab output"
+        ]
+      }
+    ],
+    "extra/target_agent_complete.txt": [
+      {
+        "anchor": "HIJACK_PATTERNS = [",
+        "endAnchor": "r\"\\bexport\\b\", r\"send .* to all-staff\"]",
+        "title": "Hijack and restricted-intent patterns",
+        "note": [
+          "**Regexes for prompt-hijack phrasing plus intents an HR bot must never act on.**",
+          "- Your red-team probes in this lab try to slip past these"
+        ]
+      },
+      {
+        "anchor": "for p in HIJACK_PATTERNS:",
+        "endAnchor": "return True, f\"restricted intent /{p}/\"",
+        "title": "Input screening check",
+        "note": "**Flags input matching any hijack or restricted-intent pattern, naming the rule that hit.**"
+      }
+    ],
+    "extra/policy_engine_complete.txt": [
+      {
+        "anchor": "p = self.policy",
+        "endAnchor": "return True, \"allowed by policy\"",
+        "title": "Policy enforcement checks",
+        "note": [
+          "**Runs the YAML policy in order: rate limit, tool deny/allow lists, query types, data scopes.**",
+          "- Deny-list wins over allow-list",
+          "- Change security_policy.yaml later to alter behavior - no code edits"
+        ]
+      }
+    ],
+    "extra/security_gate_complete.txt": [
+      {
+        "anchor": "SECRET_PATTERNS = {",
+        "title": "Secret detection patterns",
+        "note": "**Regexes for leaked API keys, hardcoded passwords, and AWS keys in source.**"
+      },
+      {
+        "anchor": "findings = []",
+        "title": "Secret scan over source",
+        "note": "**Scans every .py under the app dir and reports each secret-pattern match.**"
+      },
+      {
+        "anchor": "FROM\\s+\\S+:latest",
+        "title": "Dockerfile hardening checks",
+        "note": "**Fails unpinned base images (:latest or no tag) and containers that run as root.**"
+      },
+      {
+        "anchor": "for name, ver in deps.items():",
+        "title": "Dependency CVE check",
+        "note": "**Compares each pinned dependency to the CVE db; flags versions below fixed_in.**"
+      },
+      {
+        "anchor": "h = hashlib.sha256()",
+        "title": "Signed release manifest",
+        "note": [
+          "**Hashes every file, HMAC-signs the digest, writes release_manifest.json.**",
+          "- Supply-chain integrity: deploy can verify nothing changed since the gate ran"
+        ]
       }
     ]
   }
