@@ -241,7 +241,7 @@ This is a **real RAG pipeline** built on a local **Chroma vector database**. `kb
 python create_db.py
 ```
 
-Ignore the yellow text warnings. You'll see each source and its chunk count, with the poisoned PDF flagged. (The first run downloads the small embedding model, ~30-60s; later runs are instant.)
+You'll see each source and its chunk count, with the poisoned PDF flagged. (Ignore the yellow text warnings. The first run downloads the small embedding model, and may take a little time.)
 
 ![Building the vector database](./images/sl12.png?raw=true "Building the vector database")
 
@@ -253,7 +253,7 @@ Ignore the yellow text warnings. You'll see each source and its chunk count, wit
 python rag_vulnerable.py
 ```
 
-You'll see the vector DB load, including the poisoned source mixed in with the two legitimate documents. (The first model query also includes a ~30-60s warm-up.)
+You'll see the vector DB load, including the poisoned source mixed in with the two legitimate documents.
 
 ![Loading the knowledge base](./images/sl13.png?raw=true "Loading the knowledge base")
 
