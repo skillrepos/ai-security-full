@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.14 - 07/13/26
+## Revision 4.15 - 07/13/26
 
 **Assembling Code**
 
@@ -599,7 +599,7 @@ The provided code already authenticates the JWT (a missing or bad token raises *
 
 <br><br>
 
-5. Merge `enforce_scope` into the skeleton and close the diff tab to save.
+5. Merge the changes into the skeleton and close the diff tab to save.
 
 <br><br>
 
