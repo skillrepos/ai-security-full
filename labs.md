@@ -241,7 +241,7 @@ This is a **real RAG pipeline** built on a local **Chroma vector database**. `kb
 python create_db.py
 ```
 
-You'll see each source and its chunk count, with the poisoned PDF flagged. (The first run downloads the small embedding model, ~30-60s; later runs are instant.)
+Ignore the yellow text warnings. You'll see each source and its chunk count, with the poisoned PDF flagged. (The first run downloads the small embedding model, ~30-60s; later runs are instant.)
 
 ![Building the vector database](./images/sl12.png?raw=true "Building the vector database")
 
