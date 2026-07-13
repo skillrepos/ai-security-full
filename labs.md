@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.12 - 07/12/26
+## Revision 4.14 - 07/13/26
 
 **Assembling Code**
 
@@ -176,7 +176,7 @@ code architecture_dfd.mmd
 
 <br><br>
 
-11. (Optional) Threat models change as the system changes. Open `architecture.json`, find the `account_tool` component, and change its `"handles_pii"` value from `true`... or add a brand-new component such as `{"id": "audit_log", "type": "datastore", "trust_zone": "internal", "handles_pii": true}` to the components list. Save, then re-run `python threat_model.py` and watch the scores, rankings, and both deliverables update.
+11. (Optional) Threat models change as the system changes. Open `architecture.json`, find the `account_tool` component, and change its `"handles_pii"` value from `true` to `false`... or add a brand-new component such as `{"id": "audit_log", "type": "datastore", "trust_zone": "internal", "handles_pii": true}` to the components list. Save, then re-run `python threat_model.py` and watch the scores, rankings, and both deliverables update.
 
 <br><br>
 
