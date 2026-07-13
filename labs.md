@@ -1,7 +1,20 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.11 - 07/04/26
+## Revision 4.12 - 07/12/26
+
+**Assembling Code**
+
+> To learn about the code without getting stuck in syntax and typing, we use a "diff and merge" approach to construct complete code.
+>
+> This involves a side-by-side view with the code to be merged in on the left and an incomplete starter set of code on the right. 
+>
+> Most code to be merged will also have informational comments available describing what the code does. You get to these by hovering over the code or content to be merged when you see the yellow comment icon in the left gutter. See figure below for an example.
+>
+> When ALL merges are done, you can save your changes and close the view by clicking on the `X` in the tab at the top of the diff.
+> <br><br>
+![merge info](./images/merge-info3.png?raw=true "merge info")
+<br><br><br>
 
 
 **Follow the startup instructions in the README.md file IF NOT ALREADY DONE!**
