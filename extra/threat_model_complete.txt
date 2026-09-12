@@ -2,7 +2,7 @@
 Lab 1 - Mapping AI Security Risks (COMPLETE REFERENCE)
 
 Loads a JSON description of an AI system, maps every component to the OWASP
-LLM Top 10 (2025) AND to MITRE ATLAS techniques, scores the attack surface,
+LLM Top 10 (2026) AND to MITRE ATLAS techniques, scores the attack surface,
 and flags trust-boundary crossings. It then writes two real deliverables:
 a data-flow diagram (Mermaid) and a risk register (Markdown).
 
@@ -90,7 +90,7 @@ def write_dfd(arch, path="architecture_dfd.mmd"):
 def write_risk_register(arch, rows, path="threat_model_report.md"):
     """Write a Markdown risk register: the deliverable you'd hand to a team."""
     out = [f"# Threat Model: {arch['system']}", "",
-           "Components mapped to **OWASP LLM Top 10 (2025)** and **MITRE ATLAS** "
+           "Components mapped to **OWASP LLM Top 10 (2026)** and **MITRE ATLAS** "
            "techniques (https://atlas.mitre.org/techniques).", "",
            "## Risk register (highest score first)", "",
            "| Component | Type | OWASP | Risk | MITRE ATLAS | Score | Band |",

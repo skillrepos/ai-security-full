@@ -20,6 +20,7 @@ Routing (per call, via complete(..., prefer="fast"|"strong")):
 Dependency-free: uses only the Python standard library.
 """
 import json
+import re
 import os
 import urllib.request
 import urllib.error
@@ -106,7 +107,7 @@ S10 Hate                 S11 Suicide & Self-Harm   S12 Sexual Content
 S13 Elections            S14 Code Interpreter Abuse
 
 Respond with JSON only:
-{"violation": 0 or 1, "category": "<S-code or empty>", "rationale": "<one sentence>"}"""
+{"violation": 0 or 1, "category": "<S-code or empty>", "rationale": "<15 words max>"}"""
 
 
 def moderate(messages):
@@ -115,36 +116,56 @@ def moderate(messages):
     Returns (verdict, detail) where verdict is "safe" or "unsafe" and detail is
     a short classifier output (e.g. "unsafe / S9 - ..."). Returns (None, reason)
     when the classifier is unavailable (no GROQ_API_KEY) so callers can skip it.
+
+    This function FAILS CLOSED: if the classifier answers with something we
+    cannot read, the verdict is "unsafe". A safety check that returns "safe"
+    when it did not actually understand the answer is worse than no check.
     """
     if not GROQ_API_KEY:
         return None, "Safety classifier unavailable (set GROQ_API_KEY to enable it)"
     payload = {"model": GROQ_GUARD_MODEL,
                "messages": [{"role": "system", "content": GUARD_POLICY}] + list(messages),
-               "temperature": 0, "max_tokens": 200}
+               "temperature": 0, "max_tokens": 512}
     try:
         resp = _post(GROQ_URL, payload, {"Authorization": f"Bearer {GROQ_API_KEY}"})
     except urllib.error.HTTPError as e:
         return None, f"Safety classifier request failed ({e.code})"
     text = resp["choices"][0]["message"]["content"].strip()
 
-    # Preferred path: the policy asks for JSON.
-    try:
-        blob = text[text.index("{"):text.rindex("}") + 1]
-        data = json.loads(blob)
-        unsafe = str(data.get("violation", 0)) in ("1", "True", "true")
-        cat = (data.get("category") or "").strip()
-        why = (data.get("rationale") or "").strip()
-        detail = ("unsafe" if unsafe else "safe")
+    def _fmt(unsafe, cat, why):
+        detail = "unsafe" if unsafe else "safe"
         if cat:
             detail += f" / {cat}"
         if why:
             detail += f" - {why}"
         return ("unsafe" if unsafe else "safe"), detail
+
+    # 1. Preferred path: the policy asks for JSON.
+    try:
+        data = json.loads(text[text.index("{"):text.rindex("}") + 1])
+        return _fmt(str(data.get("violation", 0)) in ("1", "True", "true"),
+                    (data.get("category") or "").strip(),
+                    (data.get("rationale") or "").strip())
     except (ValueError, KeyError, TypeError, AttributeError):
         pass
 
-    # Fallback: a Llama-Guard-style "unsafe\nS2" reply.
-    return ("unsafe" if text.lower().startswith("unsafe") else "safe"), text
+    # 2. Truncated JSON (the reply ran past max_tokens mid-rationale). "violation"
+    #    is the first field, so it survives even when the closing brace does not.
+    m = re.search(r'"violation"\s*:\s*([01])', text)
+    if m:
+        cat = re.search(r'"category"\s*:\s*"([^"]*)"', text)
+        return _fmt(m.group(1) == "1", cat.group(1).strip() if cat else "",
+                    "(classifier reply truncated)")
+
+    # 3. Legacy Llama-Guard-style "unsafe\nS2" / "safe" reply.
+    low = text.lower()
+    if low.startswith("unsafe"):
+        return "unsafe", text
+    if low.startswith("safe"):
+        return "safe", text
+
+    # 4. Unreadable. Fail closed rather than waving it through.
+    return "unsafe", f"unsafe / unreadable classifier reply - failing closed: {text[:80]!r}"
 
 
 def _mock(messages, *_):
