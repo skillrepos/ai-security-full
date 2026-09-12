@@ -69,6 +69,18 @@ def _ollama(messages, temperature, max_tokens):
     return resp["message"]["content"].strip()
 
 
+def _message_text(message):
+    """Pull the answer out of a chat-completion message.
+
+    The gpt-oss models sometimes return an empty `content` and put the answer in
+    `reasoning` instead. Falling back to it keeps a reply from arriving blank.
+    """
+    text = (message.get("content") or "").strip()
+    if not text:
+        text = (message.get("reasoning") or "").strip()
+    return text
+
+
 def _groq(messages, prefer, temperature, max_tokens):
     model = GROQ_MODEL_STRONG if prefer == "strong" else GROQ_MODEL_FAST
     payload = {"model": model, "messages": messages,
@@ -85,7 +97,7 @@ def _groq(messages, prefer, temperature, max_tokens):
             body = ""
         raise RuntimeError(f"Groq request failed ({e.code}) for model {model}. "
                            f"Response: {body or '(no body)'}")
-    return resp["choices"][0]["message"]["content"].strip()
+    return _message_text(resp["choices"][0]["message"])
 
 
 def guard_available():
@@ -126,11 +138,15 @@ def moderate(messages):
     payload = {"model": GROQ_GUARD_MODEL,
                "messages": [{"role": "system", "content": GUARD_POLICY}] + list(messages),
                "temperature": 0, "max_tokens": 512}
-    try:
-        resp = _post(GROQ_URL, payload, {"Authorization": f"Bearer {GROQ_API_KEY}"})
-    except urllib.error.HTTPError as e:
-        return None, f"Safety classifier request failed ({e.code})"
-    text = resp["choices"][0]["message"]["content"].strip()
+    text = ""
+    for _ in range(2):          # a blank reply is usually transient - try once more
+        try:
+            resp = _post(GROQ_URL, payload, {"Authorization": f"Bearer {GROQ_API_KEY}"})
+        except urllib.error.HTTPError as e:
+            return None, f"Safety classifier request failed ({e.code})"
+        text = _message_text(resp["choices"][0]["message"])
+        if text:
+            break
 
     def _fmt(unsafe, cat, why):
         detail = "unsafe" if unsafe else "safe"
@@ -165,7 +181,11 @@ def moderate(messages):
         return "safe", text
 
     # 4. Unreadable. Fail closed rather than waving it through.
-    return "unsafe", f"unsafe / unreadable classifier reply - failing closed: {text[:80]!r}"
+    # Deliberately does NOT echo the reply - it can contain the very content the
+    # output guard just redacted.
+    if not text:
+        return "unsafe", "unsafe / no reply from the classifier - failing closed"
+    return "unsafe", "unsafe / classifier reply unreadable - failing closed"
 
 
 def _mock(messages, *_):
