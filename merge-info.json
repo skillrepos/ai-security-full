@@ -121,7 +121,7 @@
         "note": [
           "**Registers the guards main() runs, in order, on input then output.**",
           "- Cheapest check (length) goes first",
-          "- Llama Guard adds a model-based layer after these (needs GROQ_API_KEY)"
+          "- A hosted safety classifier adds a model-based layer after these (needs GROQ_API_KEY)"
         ]
       }
     ],

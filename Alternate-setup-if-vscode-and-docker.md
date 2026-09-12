@@ -76,7 +76,7 @@ ollama list
 You should see Python 3.x and `llama3.2:3b` in the Ollama model list. If `ollama list` errors that it can't connect, start the server:
  
 ```
-bash scripts/startOllama.sh
+bash scripts/startup_ollama.sh
 ```
  
 ---
@@ -118,7 +118,7 @@ Open `labs.md` (right‑click → **Open Preview**, or the Command Palette → "
 Each time you come back to the labs:
  
 1. Open the folder in VS Code → **Reopen in Container** (it reuses the existing container; the `postAttachCommand` restarts Ollama for you).
-2. In a terminal, confirm the model server is up: `bash scripts/startOllama.sh`
+2. In a terminal, confirm the model server is up: `bash scripts/startup_ollama.sh`
 3. If you use Groq and it isn't already set: `source scripts/setup-key.sh`
 4. Warm up once: `python scripts/warmup_ollama.py`
 ---
@@ -127,7 +127,7 @@ Each time you come back to the labs:
  
 - **"Reopen in Container" never appears** — make sure the Dev Containers extension is installed and Docker Desktop is running, then use **F1 → Dev Containers: Reopen in Container** manually.
 - **Build fails on Ollama install / out of memory** — increase Docker Desktop's memory allocation (Settings → Resources) to at least 8 GB and rebuild (**F1 → Dev Containers: Rebuild Container**).
-- **A lab reports it cannot reach Ollama** — run `bash scripts/startOllama.sh` from the repo root, then retry. Check `/tmp/ollama.log` if it persists.
+- **A lab reports it cannot reach Ollama** — run `bash scripts/startup_ollama.sh` from the repo root, then retry. Check `/tmp/ollama.log` if it persists.
 - **First model call is slow (~30–60s)** — run `python scripts/warmup_ollama.py` once, then retry.
 - **Groq 429 (rate limit)** — you've exceeded the free tier (~30 req/min). Wait and retry, or `export LLM_BACKEND=ollama` to use the local model.
 - **Groq 401 / invalid key** — re‑run `source scripts/setup-key.sh` with a fresh key from console.groq.com, or unset it to fall back to Ollama.

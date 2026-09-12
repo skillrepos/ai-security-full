@@ -2,7 +2,7 @@
 AI risk catalog for the threat-model engine. Provided complete.
 
 Two real, current frameworks:
-  * OWASP Top 10 for LLM Applications (2025) - the risk catalog.
+  * OWASP Top 10 for LLM Applications (2026) - the risk catalog.
   * MITRE ATLAS (Adversarial Threat Landscape for AI Systems) - each OWASP
     risk is tagged with the ATLAS technique id(s) that realize it, so a
     finding maps to the same knowledge base AI red teams use. ATLAS ids are
@@ -20,7 +20,7 @@ to, and the mapped ATLAS technique ids.
 # How to read one row (plain English):
 # "LLM01 Prompt Injection applies to llm/agent/rag/tool/ui, and maps to
 # ATLAS AML.T0051, which is the prompt-injection attack technique."
-OWASP_LLM_2025 = [
+OWASP_LLM_2026 = [
     {"id": "LLM01", "name": "Prompt Injection",
      "desc": "Crafted input overrides developer instructions or hijacks agent goals.",
      "applies_to": ["llm", "agent", "rag", "tool", "ui"],
@@ -29,38 +29,38 @@ OWASP_LLM_2025 = [
      "desc": "Model or pipeline leaks PII, secrets, or proprietary data.",
      "applies_to": ["llm", "rag", "agent", "datastore", "tool"],
      "atlas": ["AML.T0057", "AML.T0024"]},          # LLM Data Leakage; Exfil via Inference API
-    {"id": "LLM03", "name": "Supply Chain",
-     "desc": "Compromised models, datasets, or dependencies introduce risk.",
-     "applies_to": ["llm", "datastore", "deploy"],
-     "atlas": ["AML.T0010"]},                        # ML Supply Chain Compromise
-    {"id": "LLM04", "name": "Data and Model Poisoning",
-     "desc": "Tampered training data or indexed documents corrupt behavior.",
-     "applies_to": ["rag", "datastore", "llm"],
-     "atlas": ["AML.T0020", "AML.T0059"]},           # Poison Training Data; Erode Dataset Integrity
-    {"id": "LLM05", "name": "Improper Output Handling",
-     "desc": "Unvalidated model output flows into downstream systems (XSS, SQLi, RCE).",
-     "applies_to": ["llm", "agent", "tool", "ui"],
-     "atlas": []},                                   # no 1:1 ATLAS technique
-    {"id": "LLM06", "name": "Excessive Agency",
+    {"id": "LLM03", "name": "Excessive Agency",
      "desc": "Agent has too much functionality, permission, or autonomy.",
      "applies_to": ["agent", "tool", "mcp"],
      "atlas": []},                                   # emerging ATLAS agent techniques
-    {"id": "LLM07", "name": "System Prompt Leakage",
-     "desc": "System prompt with secrets or rules is exposed to users.",
-     "applies_to": ["llm", "agent"],
-     "atlas": ["AML.T0056"]},                        # LLM Meta Prompt Extraction
-    {"id": "LLM08", "name": "Vector and Embedding Weaknesses",
-     "desc": "Weaknesses in RAG embeddings enable injection or cross-tenant leakage.",
-     "applies_to": ["rag", "datastore"],
-     "atlas": []},                                   # no 1:1 ATLAS technique
-    {"id": "LLM09", "name": "Misinformation",
-     "desc": "Model produces false or fabricated content trusted by users.",
-     "applies_to": ["llm", "rag", "ui"],
-     "atlas": ["AML.T0060", "AML.T0062"]},           # Publish/Discover LLM Hallucinations
-    {"id": "LLM10", "name": "Unbounded Consumption",
+    {"id": "LLM04", "name": "Supply Chain",
+     "desc": "Compromised models, datasets, or dependencies introduce risk.",
+     "applies_to": ["llm", "datastore", "deploy"],
+     "atlas": ["AML.T0010"]},                        # ML Supply Chain Compromise
+    {"id": "LLM05", "name": "Data and Model Poisoning",
+     "desc": "Tampered training data or indexed documents corrupt behavior.",
+     "applies_to": ["rag", "datastore", "llm"],
+     "atlas": ["AML.T0020", "AML.T0059"]},           # Poison Training Data; Erode Dataset Integrity
+    {"id": "LLM06", "name": "Unbounded Consumption",
      "desc": "Uncapped requests/tokens enable denial-of-wallet or DoS.",
      "applies_to": ["llm", "agent", "mcp", "tool"],
      "atlas": ["AML.T0029", "AML.T0034"]},           # Denial of ML Service; Cost Harvesting
+    {"id": "LLM07", "name": "Misinformation",
+     "desc": "Model produces false or fabricated content trusted by users.",
+     "applies_to": ["llm", "rag", "ui"],
+     "atlas": ["AML.T0060", "AML.T0062"]},           # Publish/Discover LLM Hallucinations
+    {"id": "LLM08", "name": "Hidden Context Exposure",
+     "desc": "System prompt, tool definitions, or other hidden context leak to users.",
+     "applies_to": ["llm", "agent"],
+     "atlas": ["AML.T0056"]},                        # LLM Meta Prompt Extraction
+    {"id": "LLM09", "name": "Vector and Embedding Weaknesses",
+     "desc": "Weaknesses in RAG embeddings enable injection or cross-tenant leakage.",
+     "applies_to": ["rag", "datastore"],
+     "atlas": []},                                   # no 1:1 ATLAS technique
+    {"id": "LLM10", "name": "Improper Output Handling",
+     "desc": "Unvalidated model output flows into downstream systems (XSS, SQLi, RCE).",
+     "applies_to": ["llm", "agent", "tool", "ui"],
+     "atlas": []},                                   # no 1:1 ATLAS technique
 ]
 
 # Mapping table: component type -> base likelihood score and rationale note.

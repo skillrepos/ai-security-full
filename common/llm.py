@@ -7,8 +7,8 @@ Backends:
                scripts/startup_ollama.sh during Codespace creation.
   * "groq"   - Groq's OpenAI-compatible API (very fast, free tier). Used
                automatically whenever GROQ_API_KEY is set. Routes:
-                 prefer="fast"   -> llama-3.1-8b-instant
-                 prefer="strong" -> llama-3.3-70b-versatile
+                 prefer="fast"   -> openai/gpt-oss-20b
+                 prefer="strong" -> openai/gpt-oss-120b
   * "mock"   - deterministic, offline. Only used if you set LLM_BACKEND=mock
                (handy for grading or when no model is available).
 
@@ -29,9 +29,11 @@ OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/chat")
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_URL = os.environ.get("GROQ_URL", "https://api.groq.com/openai/v1/chat/completions")
-GROQ_MODEL_FAST = os.environ.get("GROQ_MODEL_FAST", "llama-3.1-8b-instant")
-GROQ_MODEL_STRONG = os.environ.get("GROQ_MODEL_STRONG", "llama-3.3-70b-versatile")
-GROQ_GUARD_MODEL = os.environ.get("GROQ_GUARD_MODEL", "meta-llama/llama-guard-4-12b")
+# Groq retired the Llama 3.x models (shutdown 2026-08-16) and Llama Guard 4
+# (shutdown 2026-03-05). These are the replacements Groq itself names.
+GROQ_MODEL_FAST = os.environ.get("GROQ_MODEL_FAST", "openai/gpt-oss-20b")
+GROQ_MODEL_STRONG = os.environ.get("GROQ_MODEL_STRONG", "openai/gpt-oss-120b")
+GROQ_GUARD_MODEL = os.environ.get("GROQ_GUARD_MODEL", "openai/gpt-oss-safeguard-20b")
 
 
 def _resolve(prefer):
@@ -62,7 +64,7 @@ def _ollama(messages, temperature, max_tokens):
     except (urllib.error.URLError, ConnectionError) as e:
         raise RuntimeError(
             f"Could not reach Ollama at {OLLAMA_URL} ({e}). "
-            "Start it with `bash scripts/startOllama.sh` (or `ollama serve &`).")
+            "Start it with `bash scripts/startup_ollama.sh` (or `ollama serve &`).")
     return resp["message"]["content"].strip()
 
 
@@ -86,28 +88,63 @@ def _groq(messages, prefer, temperature, max_tokens):
 
 
 def guard_available():
-    """True if the real Llama Guard moderation backend (Groq) can be used."""
+    """True if the hosted safety-classifier backend (Groq) can be used."""
     return bool(GROQ_API_KEY)
 
 
+# The safety policy handed to the guard model. gpt-oss-safeguard is a
+# bring-your-own-policy classifier: unlike Llama Guard, the categories are
+# whatever this policy says they are. The S-codes below deliberately mirror the
+# MLCommons hazard taxonomy the labs discuss, so the output still reads the same.
+GUARD_POLICY = """You are a safety classifier. Classify ONLY the user's message.
+
+Categories:
+S1 Violent Crimes        S2 Non-Violent Crimes     S3 Sex-Related Crimes
+S4 Child Exploitation    S5 Defamation             S6 Specialized Advice
+S7 Privacy               S8 Intellectual Property  S9 Indiscriminate Weapons
+S10 Hate                 S11 Suicide & Self-Harm   S12 Sexual Content
+S13 Elections            S14 Code Interpreter Abuse
+
+Respond with JSON only:
+{"violation": 0 or 1, "category": "<S-code or empty>", "rationale": "<one sentence>"}"""
+
+
 def moderate(messages):
-    """Run Meta's Llama Guard (hosted on Groq) over a conversation.
+    """Run a hosted safety classifier (Groq) over a conversation.
 
     Returns (verdict, detail) where verdict is "safe" or "unsafe" and detail is
-    the raw classifier output (e.g. "unsafe\\nS2"). Returns (None, reason) when
-    Llama Guard is unavailable (no GROQ_API_KEY) so callers can skip it.
+    a short classifier output (e.g. "unsafe / S9 - ..."). Returns (None, reason)
+    when the classifier is unavailable (no GROQ_API_KEY) so callers can skip it.
     """
     if not GROQ_API_KEY:
-        return None, "Llama Guard unavailable (set GROQ_API_KEY to enable it)"
-    payload = {"model": GROQ_GUARD_MODEL, "messages": messages,
-               "temperature": 0, "max_tokens": 100}
+        return None, "Safety classifier unavailable (set GROQ_API_KEY to enable it)"
+    payload = {"model": GROQ_GUARD_MODEL,
+               "messages": [{"role": "system", "content": GUARD_POLICY}] + list(messages),
+               "temperature": 0, "max_tokens": 200}
     try:
         resp = _post(GROQ_URL, payload, {"Authorization": f"Bearer {GROQ_API_KEY}"})
     except urllib.error.HTTPError as e:
-        return None, f"Llama Guard request failed ({e.code})"
+        return None, f"Safety classifier request failed ({e.code})"
     text = resp["choices"][0]["message"]["content"].strip()
-    verdict = "unsafe" if text.lower().startswith("unsafe") else "safe"
-    return verdict, text
+
+    # Preferred path: the policy asks for JSON.
+    try:
+        blob = text[text.index("{"):text.rindex("}") + 1]
+        data = json.loads(blob)
+        unsafe = str(data.get("violation", 0)) in ("1", "True", "true")
+        cat = (data.get("category") or "").strip()
+        why = (data.get("rationale") or "").strip()
+        detail = ("unsafe" if unsafe else "safe")
+        if cat:
+            detail += f" / {cat}"
+        if why:
+            detail += f" - {why}"
+        return ("unsafe" if unsafe else "safe"), detail
+    except (ValueError, KeyError, TypeError, AttributeError):
+        pass
+
+    # Fallback: a Llama-Guard-style "unsafe\nS2" reply.
+    return ("unsafe" if text.lower().startswith("unsafe") else "safe"), text
 
 
 def _mock(messages, *_):

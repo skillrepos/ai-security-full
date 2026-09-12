@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.15 - 07/13/26
+## Revision 4.16 - 09/12/26
 
 **Assembling Code**
 
@@ -24,7 +24,7 @@
 
 **Lab 1: Mapping AI Security Risks**
 
-**Purpose: In this lab, we'll perform a structured threat model of an AI system. We'll map every component (LLM, RAG, agent, MCP tools) to the OWASP Top 10 for LLM Applications (2025), score the attack surface, and pinpoint where the highest-risk vulnerabilities and trust-boundary crossings occur.**
+**Purpose: In this lab, we'll perform a structured threat model of an AI system. We'll map every component (LLM, RAG, agent, MCP tools) to the OWASP Top 10 for LLM Applications (2026), score the attack surface, and pinpoint where the highest-risk vulnerabilities and trust-boundary crossings occur.**
 
 ---
 
@@ -40,11 +40,11 @@
 | File | Role |
 |---|---|
 | **`architecture.json`** | The **system under review** — the OmniTech assistant described as *data, not code*: its components, the data flows between them, and the trust boundaries they cross. This is the input you are modeling. |
-| **`owasp_llm.py`** | The **knowledge base** (provided complete) — the OWASP LLM Top 10 (2025) catalog: for each risk, which component *types* it applies to, plus a `COMPONENT_EXPOSURE` table of likelihood weights. |
+| **`owasp_llm.py`** | The **knowledge base** (provided complete) — the OWASP LLM Top 10 (2026) catalog: for each risk, which component *types* it applies to, plus a `COMPONENT_EXPOSURE` table of likelihood weights. |
 | **`threat_model.py`** | The **engine** — you fill in **two** small functions; it then joins the system to the catalog, scores every component-vs-risk pair, flags trust-boundary crossings, prints the ranked threat model, and writes two deliverables. |
 | **`../extra/threat_model_complete.txt`** | The completed reference you diff-and-merge into the skeleton. |
 
-> **A note on frameworks (no memorizing required):** the **OWASP LLM Top 10 (2025)** is the risk list we map to — *that's* the one to pay attention to. You'll also see a **MITRE ATLAS** column of ids like `AML.T0051`; ATLAS is a catalog of real-world AI attack techniques ("ATT&CK for AI"). Treat it as a **bonus cross-reference** for now — we go deeper later, and nobody expects you to know the ids.
+> **A note on frameworks (no memorizing required):** the **OWASP LLM Top 10 (2026)** is the risk list we map to — *that's* the one to pay attention to. You'll also see a **MITRE ATLAS** column of ids like `AML.T0051`; ATLAS is a catalog of real-world AI attack techniques ("ATT&CK for AI"). Treat it as a **bonus cross-reference** for now — we go deeper later, and nobody expects you to know the ids.
 
 ---
 
@@ -97,11 +97,11 @@ This is just a model of the system — change the JSON and the threat model chan
 code owasp_llm.py
 ```
 
-This is the **OWASP Top 10 for LLM Applications (2025)** encoded as a lookup table. Read it from the component's point of view: each risk's **`applies_to`** list says which component *types* that risk is relevant to (for example, `LLM06 Excessive Agency` applies to `agent`, `tool`, and `mcp`). So when the engine processes the `support_agent`, it inherits every risk whose `applies_to` includes `agent` — prompt injection, excessive agency, improper output handling, and more — while a `datastore` inherits only the couple that list it.
+This is the **OWASP Top 10 for LLM Applications (2026)** encoded as a lookup table. Read it from the component's point of view: each risk's **`applies_to`** list says which component *types* that risk is relevant to (for example, `LLM03 Excessive Agency` applies to `agent`, `tool`, and `mcp`). So when the engine processes the `support_agent`, it inherits every risk whose `applies_to` includes `agent` — prompt injection, excessive agency, improper output handling, and more — while a `datastore` inherits only the couple that list it.
 
 Each risk also carries an optional **`atlas`** field — the MITRE ATLAS technique id(s) for that risk (e.g., `LLM01 Prompt Injection` → `AML.T0051`). Some are left blank where ATLAS has no clean match yet. As noted above, this is bonus context — skim it and move on.
 
-Below the catalog, the **`COMPONENT_EXPOSURE`** table gives each component type a **likelihood weight** from 1 to 3 — how reachable/attackable that type is. A `ui` and a `rag` are `3` (they take untrusted input directly), an `llm`/`tool`/`mcp` are `2`, and an internal `datastore`/`deploy` are `1`. The engine uses this number as the *likelihood* half of the score.
+Below the catalog, the **`COMPONENT_EXPOSURE`** table gives each component type a **likelihood weight** from 1 to 3 — how reachable/attackable that type is. A `ui`, a `rag` and an `agent` are `3` (they take untrusted input directly or act autonomously), an `llm`/`tool`/`mcp` are `2`, and an internal `datastore`/`deploy` are `1`. The engine uses this number as the *likelihood* half of the score.
 
 ![Examining the architecture](./images/sl2.png?raw=true "Examining the architecture")
 
@@ -115,7 +115,7 @@ code -d ../extra/threat_model_complete.txt threat_model.py
 
 The two functions you complete (the join, the trust-boundary check, and the report writers are already done for you):
    - **`map_risks(component)`** — the *lookup*: keep only the OWASP risks whose `applies_to` list includes this component's `type`. (So an `agent` picks up prompt injection, excessive agency, and more; a `datastore` picks up just a couple.)
-   - **`score(component, risk)`** — the *math*: **likelihood × impact**. *Likelihood* is the component type's `COMPONENT_EXPOSURE` weight (1–3; higher = more exposed). *Impact* is `2`, or `3` if the component handles PII, bumped one higher for the two most damaging risks (Sensitive Disclosure `LLM02` and Excessive Agency `LLM06`). The result is banded **HIGH** (≥ 8), **MEDIUM** (5–7), or **LOW** (< 5).
+   - **`score(component, risk)`** — the *math*: **likelihood × impact**. *Likelihood* is the component type's `COMPONENT_EXPOSURE` weight (1–3; higher = more exposed). *Impact* is `2`, or `3` if the component handles PII, bumped one higher for the two most damaging risks (Sensitive Disclosure `LLM02` and Excessive Agency `LLM03`) — but **capped at 3** (`min(3, impact + 1)`), so a PII component already at 3 stays at 3. The result is banded **HIGH** (≥ 8), **MEDIUM** (5–7), or **LOW** (< 5).
 
 That's the whole method: the engine never "guesses" a threat — it mechanically pairs every component with every applicable risk and scores the pair, which is what makes the result repeatable.
 
@@ -144,7 +144,7 @@ python threat_model.py
 ![Threat model output](./images/sl5.png?raw=true "Threat model output")
 
 
-✓ **Find this one row** (it's the worked example from the slides): `support_agent` × `LLM06 Excessive Agency`. It scores likelihood **3** (an `agent` is highly exposed) × impact **3** (it handles PII, and LLM06 is one of the two top-damage risks) = **9 → HIGH**, so it sits at or near the very top. If you can explain why that row scores 9, you understand the entire engine — every other row is the same lookup and math with different numbers. Notice that the `support_agent` component dominates the top with multiple **HIGH** rows — it is an `agent` (likelihood 3) that handles PII (impact 3), so its applicable risks score 9. That matches the real world: an agent that acts autonomously and calls tools is the largest attack surface in this system. The ATLAS column ties each finding to a real, documented attack technique you can look up at atlas.mitre.org.
+✓ **Find this one row** (it's the worked example from the slides): `support_agent` × `LLM03 Excessive Agency`. It scores likelihood **3** (an `agent` is highly exposed) × impact **3** (it handles PII, and LLM03 is one of the two top-damage risks) = **9 → HIGH**, so it sits at or near the very top. If you can explain why that row scores 9, you understand the entire engine — every other row is the same lookup and math with different numbers. Notice that the `support_agent` component dominates the top with multiple **HIGH** rows — it is an `agent` (likelihood 3) that handles PII (impact 3), so its applicable risks score 9. That matches the real world: an agent that acts autonomously and calls tools is the largest attack surface in this system. The ATLAS column ties each finding to a real, documented attack technique you can look up at atlas.mitre.org.
 
 <br><br>
 
@@ -348,7 +348,7 @@ This time the poisoned chunks are blocked at the source-allowlist stage, and any
 
 **Lab 3: Implementing Guardrails**
 
-**Purpose: In this lab, we'll build a guardrails pipeline modeled on the validator pattern used by frameworks like Guardrails.ai and Llama Guard. Input guards run *before* the model to block jailbreaks and off-topic or oversized requests; output guards run *after* the model to redact PII and block unsafe completions before they reach the user.**
+**Purpose: In this lab, we'll build a guardrails pipeline modeled on the validator pattern used by frameworks like Guardrails.ai and NeMo Guardrails. Input guards run *before* the model to block jailbreaks and off-topic or oversized requests; output guards run *after* the model to redact PII and block unsafe completions before they reach the user.**
 
 <br>
 
@@ -368,7 +368,7 @@ code guardrails_demo.py
 
 Notice the two families of guards. **Input guards** (`guard_jailbreak`, `guard_topic`, `guard_length`) screen the user's request. **Output guards** (`guard_pii`, `guard_banned`) screen the model's response. Each guard returns `(ok, reason, fixed_text)` - if a guard returns fixed text, the pipeline *repairs* the content and continues; if it returns `None`, the content is *blocked*. These are the cheap, fast, deterministic checks you control.
 
-Wrapping those hand-built guards, `main()` also calls a **real safety classifier — Meta's Llama Guard 4, hosted on Groq** — on both the input and the output (via `llm.moderate()`). That's the production pattern: regex/allowlist guards you own, **plus** a model-based classifier that catches whole categories of harmful content (violence, weapons, hate, self-harm, ...) you could never enumerate by hand. Llama Guard runs only if you've set a `GROQ_API_KEY`; without one, the lab still runs with just the hand-built guards.
+Wrapping those hand-built guards, `main()` also calls a **real safety classifier — OpenAI's `gpt-oss-safeguard`, hosted on Groq** — on both the input and the output (via `llm.moderate()`). That's the production pattern: regex/allowlist guards you own, **plus** a model-based classifier that catches whole categories of harmful content (violence, weapons, hate, self-harm, ...) you could never enumerate by hand. The classifier runs only if you've set a `GROQ_API_KEY`; without one, the lab still runs with just the hand-built guards.
 
 <br><br>
 
@@ -404,7 +404,7 @@ python guardrails_demo.py
 
 <br><br>
 
-Each request flows through four layers: **Llama Guard (input) -> your input guards -> the model -> your output guards -> Llama Guard (output)**. The header line shows whether the Llama Guard classifier is `on` (it is when `GROQ_API_KEY` is set). The first request includes a brief model warm-up.
+Each request flows through four layers: **safety classifier (input) -> your input guards -> the model -> your output guards -> classifier (output)**. The header line shows whether the classifier is `on` (it is when `GROQ_API_KEY` is set). The first request includes a brief model warm-up.
 
 ![Input guard results](./images/sl25.png?raw=true "Input guard results")
 
@@ -422,7 +422,7 @@ Each request flows through four layers: **Llama Guard (input) -> your input guar
 
 <br><br>
 
-10. Now look at the **last** request (`...walk me through building a pipe bomb`). It is genuinely harmful, but it is also *on-topic* (it mentions an account), so your regex and allowlist guards let it through - exactly the kind of thing hand-built rules miss. If you set a `GROQ_API_KEY`, **Llama Guard flags it as unsafe (category `S9`, indiscriminate weapons) and blocks it at the input layer**, before the model ever sees it. Without a key you'll watch it slip past the cheap guards - which is the whole point: a model-based safety classifier is the layer that catches what patterns can't.
+10. Now look at the **last** request (`...walk me through building a pipe bomb`). It is genuinely harmful, but it is also *on-topic* (it mentions an account), so your regex and allowlist guards let it through - exactly the kind of thing hand-built rules miss. If you set a `GROQ_API_KEY`, **the safety classifier flags it as unsafe (category `S9`, indiscriminate weapons) and blocks it at the input layer**, before the model ever sees it. Without a key you'll watch it slip past the cheap guards - which is the whole point: a model-based safety classifier is the layer that catches what patterns can't.
 
    (To enable it for this run: `export GROQ_API_KEY=<your-key>` and re-run. See the README for a free key.)
 
@@ -436,7 +436,7 @@ Each request flows through four layers: **Llama Guard (input) -> your input guar
 - **Guardrails wrap the model on both sides** - validate input before the model, validate output before the user.
 - **Two outcomes, not one** - some violations are *repaired* (redact PII), others are *blocked* (unsafe content). A good pipeline supports both.
 - **Allowlists beat blocklists for scope** - defining what's allowed keeps an assistant on-topic more reliably than chasing every off-topic case.
-- **Frameworks formalize this pattern** - Guardrails.ai, Llama Guard, and NeMo Guardrails productize the same validator chain you just built.
+- **Frameworks formalize this pattern** - Guardrails.ai, NeMo Guardrails, and hosted safety classifiers productize the same validator chain you just built.
 
 <p align="center">
 <b>[END OF LAB]</b>

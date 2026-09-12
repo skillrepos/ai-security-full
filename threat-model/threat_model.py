@@ -12,7 +12,7 @@ math). Everything else (the join, the boundary check, the report writers, and
 main) is already provided, so once those two are in, the lab runs.
 """
 import json
-from owasp_llm import OWASP_LLM_2025, COMPONENT_EXPOSURE
+from owasp_llm import OWASP_LLM_2026, COMPONENT_EXPOSURE
 
 
 def load_architecture(path="architecture.json"):
@@ -25,7 +25,7 @@ def load_architecture(path="architecture.json"):
 # ===========================================================================
 def map_risks(component):
     """Return the OWASP LLM risks that apply to a component type."""
-    # TODO (merge): filter OWASP_LLM_2025 by component["type"] in r["applies_to"]
+    # TODO (merge): filter OWASP_LLM_2026 by component["type"] in r["applies_to"]
     raise NotImplementedError("map_risks not implemented yet")
 
 

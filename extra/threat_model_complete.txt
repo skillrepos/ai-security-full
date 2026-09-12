@@ -10,7 +10,7 @@ This reference fills in the two functions you merge -- map_risks() (the lookup)
 and score() (the math). Everything else is identical to the skeleton.
 """
 import json
-from owasp_llm import OWASP_LLM_2025, COMPONENT_EXPOSURE
+from owasp_llm import OWASP_LLM_2026, COMPONENT_EXPOSURE
 
 
 def load_architecture(path="architecture.json"):
@@ -24,14 +24,14 @@ def load_architecture(path="architecture.json"):
 def map_risks(component):
     """Return the OWASP LLM risks that apply to a component type."""
     ctype = component["type"]
-    return [r for r in OWASP_LLM_2025 if ctype in r["applies_to"]]
+    return [r for r in OWASP_LLM_2026 if ctype in r["applies_to"]]
 
 
 def score(component, risk):
     """Simple risk score = likelihood (by component) x impact (PII boost)."""
     likelihood = COMPONENT_EXPOSURE.get(component["type"], {}).get("likelihood", 1)
     impact = 3 if component.get("handles_pii") else 2
-    if risk["id"] in ("LLM02", "LLM06"):
+    if risk["id"] in ("LLM02", "LLM03"):
         impact = min(3, impact + 1)
     value = likelihood * impact
     band = "HIGH" if value >= 8 else "MEDIUM" if value >= 5 else "LOW"

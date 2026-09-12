@@ -109,13 +109,13 @@ You can either open it in a separate browser instance or open it in the codespac
 
 ## Troubleshooting
 
-- **A lab reports it cannot reach Ollama** - the server isn't running. Run `bash scripts/startOllama.sh` from the repo root, then retry. Check `/tmp/ollama.log` if it persists.
+- **A lab reports it cannot reach Ollama** - the server isn't running. Run `bash scripts/startup_ollama.sh` from the repo root, then retry. Check `/tmp/ollama.log` if it persists.
 - **The first model call is slow (~30-60s)** - run `python3 scripts/warmup_ollama.py` once, then retry. Later calls in the same session are fast.
 - **Groq returns 429 (rate limit)** - you've exceeded the free tier's ~30 req/min. Wait a few seconds and retry, or `export LLM_BACKEND=ollama` to switch to the local model. Make sure each person uses their own key.
 - **Groq returns 401 / invalid key** - `GROQ_API_KEY` is missing or wrong. Re-copy the key from console.groq.com, or unset it to fall back to Ollama.
 - **A `python` command "hangs"** - the RAG and MCP labs use interactive prompts or run servers. Follow the lab's stop instruction (`quit` or `Ctrl+C`).
-- **`Address already in use` in Lab 4** - a previous server is still running. Stop it with `Ctrl+C`, or `kill $(lsof -t -i:8000)` / `:9000`.
-- **`ModuleNotFoundError: yaml` in Lab 7** - run `pip install -r requirements.txt` from the repo root.
+- **`Address already in use` in Lab 5** - a previous MCP server is still running on port 8000. Stop it with `Ctrl+C`, or `kill $(lsof -t -i:8000)`.
+- **`ModuleNotFoundError: yaml` in Lab 8** - run `pip install -r requirements.txt` from the repo root.
 - **Skeleton file errors before merging** - the skeleton files are meant to be completed via the `code -d` diff-merge step first. Each lab tells you when to merge.
 
 ## License and attribution

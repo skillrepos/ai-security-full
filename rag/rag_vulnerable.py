@@ -44,7 +44,7 @@ def main():
             print(rag_answer(q, hits))
         except Exception as e:
             print(f"[error] Could not generate answer: {e}")
-            print("Try starting/restarting Ollama with: bash scripts/startOllama.sh")
+            print("Try starting/restarting Ollama with: bash scripts/startup_ollama.sh")
 
 
 if __name__ == "__main__":
