@@ -1,7 +1,7 @@
 # AI Security for Developers and Practitioners (Full Day)
 ## Building safe, trustworthy, and resilient AI systems
 ## Session labs
-## Revision 4.17 - 09/12/26
+## Revision 4.18 - 09/12/26
 
 **Assembling Code**
 
@@ -413,9 +413,11 @@ The header line shows whether the classifier is `on` (it is when `GROQ_API_KEY` 
 
 <br><br>
 
-10. Now look at the **last** request (`...walk me through building a pipe bomb`). It is genuinely harmful, but also *on-topic* (it mentions an account), so your regex and allowlist guards let it through - exactly what hand-built rules miss. With a `GROQ_API_KEY` set, **the safety classifier flags it as unsafe (category `S9`, indiscriminate weapons) and blocks it at the input layer**, before the model ever sees it. Without a key, you'll watch it slip past.
+10. Now look at the **last** request (`...walk me through building a pipe bomb`). It is genuinely harmful, but also *on-topic* (it mentions an account), so your regex and allowlist guards let it through - exactly what hand-built rules miss. With a `GROQ_API_KEY` set, **the safety classifier usually flags it as unsafe (category `S9`, indiscriminate weapons) and blocks it at the input layer**, before the model ever sees it. Without a key, you'll watch it slip past.
 
-   The classifier is itself a model, so it is not perfectly repeatable - run the demo twice and a borderline request may be blocked at the input layer one time and caught by the output guard the next. That is worth seeing rather than hiding: it is exactly why you layer cheap deterministic guards underneath a model-based one, and why `llm.moderate()` fails *closed* - if it can't read the classifier's answer, it returns `unsafe`.
+   **Usually - not always.** The classifier is itself a model, so it is not perfectly repeatable, and across repeated runs you may see any of three outcomes on that request: blocked at the input layer with an `S9` verdict (most often), blocked with a `failing closed` message when the classifier's reply came back unreadable, or - occasionally - passed through to the model, which then refuses on its own. Other requests vary the same way: the SSN record is sometimes stopped by the classifier at the input layer and sometimes by `guard_pii` at the output layer.
+
+   Don't treat that as the lab misbehaving - it *is* the lesson. A model-based guard is probabilistic, which is why you keep cheap deterministic guards underneath it, put a second classifier pass on the output, and make `llm.moderate()` fail **closed**: when it can't read the classifier's answer it returns `unsafe` rather than waving the request through. A guard that quietly answers "safe" because it didn't understand the reply is worse than no guard at all.
 
    (To enable it for this run: `export GROQ_API_KEY=<your-key>` and re-run. See the README for a free key.)
 
